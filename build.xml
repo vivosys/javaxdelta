@@ -10,7 +10,7 @@
         <echo message="ant version is ${ant.version}"/>
     </target>
 
-    <target name="compile" depends="init">
+    <target name="all" depends="init">
         <!-- create output directory for build -->
         <mkdir dir="${classes.dir}"/>
         
