@@ -110,7 +110,7 @@ public class Delta {
 					do{
 						source_idx = source.read(sourceBuff, 0, buff_size);
 						target_idx = target.read(targetBuff, 0, buff_size);
-						int read_idx = Math.max(source_idx,target_idx);
+						int read_idx = Math.min(source_idx,target_idx);
 						int i = 0;
 						do {
 							targetidx++;
