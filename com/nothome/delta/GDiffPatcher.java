@@ -22,7 +22,7 @@
  *
  */
 
-package com.nothome..delta;
+package com.nothome.delta;
 
 /**
  * This class patches an input file with a GDIFF patch fil�e.

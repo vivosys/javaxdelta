@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="all" name="javaxdelta">
+
+    <target name="init">
+        <property file="build.properties"/>
+        
+        <property name="Name" value="Java Xdelta"/>
+
+        <echo message="user home is set to ${user.home}"/>
+        <echo message="ant version is ${ant.version}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <!-- create output directory for build -->
+        <mkdir dir="${classes.dir}"/>
+        
+        <echo message="compiling..."/>
+        
+        <javac debug="true" destdir="${classes.dir}" srcdir=".">
+            <!-- To add something to the classpath: -->
+            <classpath>
+                <!--<pathelement location="${lib.dir}/mail.jar"/>-->
+            </classpath> 
+        </javac>
+        <echo message="compile done!"/>
+    </target>
+    
+    <target name="clean" depends="init" description="Clean all build products.">
+        <delete dir="${classes.dir}"/>
+    </target>
+</project>
