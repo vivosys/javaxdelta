@@ -1,0 +1,6 @@
+Primes 1.1 calculates the primes 1..N, tells you if N is prime,
+computes the prime just below or above N.  It is useful in computing
+optimal HashTable sizes. Java source included. Copyright 1998 by
+Roedy Green of Canadian Mind Products.  May be freely distbributed
+for any purpose but military.
+

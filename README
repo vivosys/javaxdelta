@@ -1,0 +1,24 @@
+Xdelta implemented in java
+
+Sourceforge project link: http://sourceforge.net/projects/javaxdelta.
+
+This library implements Josh MacDonalds xdelta binary diff algorithm in java.
+More information on this algorithm can be found at 
+http://sourceforge.net/projects/xdelta.
+
+Included is some java code for finding primes copyrighted by Roedy Green.
+See separate copyright note for that code.
+
+This implementation uses the GDIFF file format for storing binary deltas. 
+There is also a patcher that takes a source file and a patch file in this
+format and produces the original file.
+
+Some links to other delta / diff implementations in java
+
+    * jrcs, both an rcs implementation and difference engine in java.
+    * GNU diff ported to java.
+    * XML diff and merge tools, from IBM AlphaWorks
+    * not a java tool, but the google directory's page on File Comparison.
+
+-Torgeir  <torgeir@pobox.com>
+
