@@ -21,6 +21,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
+ * Change Log:
+ * iiimmddyyn  nnnnn  Description
+ * ----------  -----  -------------------------------------------------------
+ * gls031504         made debug output conditional
  */
 
 package com.nothome.delta;
@@ -31,18 +35,18 @@ import java.util.*;
 import cmp.Primes.*; // Please note that this package has a slightly different copyright style.
 
 public class Checksum {
-    
-    public static final int BASE = 65521;    
+
+    public static final int BASE = 65521;
     public static final int S = (1 << 4); // 16
-    
+
     public static boolean debug = false;
 
     protected int hashtable[];
     protected long checksums[];
     protected int prime;
-    
+
     public Checksum() { }
-    
+
     protected static final char single_hash[] = {
         /* Random numbers generated using SLIB's pseudo-random number generator. */
         0xbcd1, 0xbb65, 0x42c2, 0xdffe, 0x9666, 0x431b, 0x8504, 0xeb46,
@@ -78,8 +82,8 @@ public class Checksum {
         0x6d71, 0xe37d, 0xb697, 0x2c4f, 0x4373, 0x9102, 0x075d, 0x8e25,
         0x1672, 0xec28, 0x6acb, 0x86cc, 0x186e, 0x9414, 0xd674, 0xd1a5
     };
-    
-    
+
+
     /**
      * assumes the buffer is of length S
      */
@@ -91,7 +95,7 @@ public class Checksum {
         }
         return ((high & 0xffff) << 16) | (low & 0xffff);
     }
-    
+
     public static long incrementChecksum(long checksum, byte out, byte in) {
         char old_c = single_hash[out+128];
         char new_c = single_hash[in+128];
@@ -99,7 +103,7 @@ public class Checksum {
         int high  = ((int)((checksum) >> 16) - (old_c * S) + low) & 0xffff;
         return (high << 16) | (low & 0xffff);
     }
-    
+
     public static int generateHash(long checksum) {
         long high = (checksum >> 16) & 0xffff;
         long low = checksum & 0xffff;
@@ -107,40 +111,42 @@ public class Checksum {
         int hash = (int) (it ^ high ^ low);
         return hash > 0 ? hash : -hash;
     }
-    
+
     /**
-     * Initialize checksums for source. The checksum for the S bytes at offset 
+     * Initialize checksums for source. The checksum for the S bytes at offset
      * S * i is inserted into an array at index i.
      *
      * This is not good enough, we also need a hashtable into these indexes.
      *
      */
     public void generateChecksums(File sourceFile, int length) throws IOException {
-        
+
         InputStream is = new BufferedInputStream(new FileInputStream(sourceFile));
         int checksumcount = (int)sourceFile.length() / S;
-        System.out.println("generating checksum array of size " + checksumcount);
-        
+		if (debug)  //gls031504
+            System.out.println("generating checksum array of size " + checksumcount);
+
         checksums = new long[checksumcount];
-        hashtable = new int[checksumcount];        
+        hashtable = new int[checksumcount];
         prime = findClosestPrime(checksumcount);
-        
-        System.out.println("using prime " + prime);
-        
+
+		if (debug)  //gls031504
+	        System.out.println("using prime " + prime);
+
         // generate cheksums at each interval
         for (int i = 0; i < checksumcount; i++) {
-			
+
             byte buf[] = new byte[S];
 
             is.read(buf, 0, S);
-                
+
             checksums[i] = queryChecksum(buf, S);
         }
         is.close();
-        
+
         // generate hashtable entries for all checksums
         for (int i = 0; i < checksumcount; i++) hashtable[i] = -1;
-        
+
         for (int i = 0; i < checksumcount; i++) {
             int hash = generateHash(checksums[i]) % prime;
 			if (debug)
@@ -151,15 +157,15 @@ public class Checksum {
             } else {
                 hashtable[hash] = i;
 			}
-        } 
+        }
         //System.out.println("checksums : " + printLongArray(checksums));
-        //System.out.println("hashtable : " + printIntArray(hashtable));               
+        //System.out.println("hashtable : " + printIntArray(hashtable));
     }
-    
+
     public int findChecksumIndex(long checksum) {
         return hashtable[generateHash(checksum) % prime];
-    }   
-    
+    }
+
     public static int findClosestPrime(int size) {
         // since it is used only one, we initialize the prime number generator here
         Primes primes = new Primes(size);
@@ -190,5 +196,5 @@ public class Checksum {
 				result += "]";
 		}
 		return result;
-	}    
+	}
 }

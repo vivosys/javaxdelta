@@ -1,4 +1,4 @@
-/* 
+/*
  *
  * Copyright (c) 2001 Torgeir Veimo
  *
@@ -20,6 +20,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
+ * Change Log:
+ * iiimmddyyn  nnnnn  Description
+ * ----------  -----  -------------------------------------------------------
+ * gls031504a         Error being written to stderr rather than throwing exception
  */
 
 package com.nothome.delta;
@@ -35,108 +39,125 @@ import java.util.*;
 import java.io.*;
 
 public class GDiffPatcher {
-        
-    public GDiffPatcher(File sourceFile, File patchFile, File outputFile) throws IOException {
-        
+
+    public GDiffPatcher(File sourceFile, File patchFile, File outputFile)
+		throws IOException, Exception                               //gls031504a
+	{
+
         RandomAccessFile source = new RandomAccessFile(sourceFile, "r");
         DataOutputStream output = new DataOutputStream(new FileOutputStream(outputFile));
         DataInputStream patch = new DataInputStream(new FileInputStream(patchFile));
-        int patchLength = (int) patchFile.length();
-        
-        byte buf[] = new byte[256];
-        
-        // This is simple; we loop through the patch file, and copies or insert as needed.
-        
-        int i = 0; 
-        
-        // the magic string is 'd1 ff d1 ff' + the version number
-        if (patch.readUnsignedByte() != 0xd1 || 
-            patch.readUnsignedByte() != 0xff || 
-            patch.readUnsignedByte() != 0xd1 || 
-            patch.readUnsignedByte() != 0xff || 
-            patch.readUnsignedByte() != 0x04) {
-                
-            System.err.println("magic string not found, aborting!");
-            source.close(); patch.close(); output.close();
-            return;
-        }        
-        i += 5;
-        
-        //while (i < patchLength) {
-        while (patch.available() > 0) {
-            // we allways read one byte. This contains the instruction
-            int command = patch.readUnsignedByte(); 
-            int length = 0; int offset = 0;
-            
-            switch (command) {
-                case 0: // end of file
-                    break;
-                case 1: // 1 data byte following; append
-                    append(1, patch, output); i += 2;
-                    break;
-                case 2: // 2 data bytes following; append
-                    append(2, patch, output); i += 3;
-                    break;
-                case 246: // 246 bytes following; append
-                    append(246, patch, output); i += 247;
-                    break;
-                case 247: // ushort, n bytes following; append
-                    length = patch.readUnsignedShort();
-                    append(length, patch, output); i+= length + 3;
-                    break;
-                case 248: // int, n bytes following; append
-                    length = patch.readInt();
-                    append(length, patch, output); i+= length + 5;
-                    break;
-                case 249: // ushort, ubyte following, copy position, length
-                    offset = patch.readUnsignedShort(); 
-                    length = patch.readUnsignedByte(); 
-                    copy(offset, length, source, output); i+= 4;
-                    break;
-                case 250: // ushort, ushort following, copy position, length
-                    offset = patch.readUnsignedShort(); 
-                    length = patch.readUnsignedShort(); 
-                    copy(offset, length, source, output);  i+= 5;
-                    break;
-                case 251: // ushort, int following, copy position, length
-                    offset = patch.readUnsignedShort(); 
-                    length = patch.readInt(); 
-                    copy(offset, length, source, output); i+= 7;
-                    break;
-                case 252: // int, ubyte following, copy position, length
-                    offset = patch.readInt(); 
-                    length = patch.readUnsignedByte(); 
-                    copy(offset, length, source, output); i+= 8;
-                    break;
-                case 253: // int, ushort following, copy position, length
-                    offset = patch.readInt(); 
-                    length = patch.readUnsignedShort(); 
-                    copy(offset, length, source, output); i+= 7;
-                    break;
-                case 254: // int, int following; copy position, length
-                    offset = patch.readInt(); 
-                    length = patch.readInt(); 
-                    copy(offset, length, source, output); i+= 9;
-                    break;
-                case 255: // long, int following; copy position, length
-                    long loffset = patch.readLong(); 
-                    length = patch.readInt(); 
-                    copy(loffset, length, source, output); i+= 13;
-                    break;
-                default: // 2 < buf[0] < 246 bytes following; append
-                    append(command, patch, output); i+= command + 1;
-                    break;
-            }
-        }
-        output.flush();
-        source.close(); patch.close(); output.close();
+
+		try                                                         //gls031504a
+		{                                                           //gls031504a
+			int patchLength = (int) patchFile.length();
+
+			byte buf[] = new byte[256];
+
+			// This is simple; we loop through the patch file, and copies or insert as needed.
+
+			int i = 0;
+
+			// the magic string is 'd1 ff d1 ff' + the version number
+			if (patch.readUnsignedByte() != 0xd1 ||
+				patch.readUnsignedByte() != 0xff ||
+				patch.readUnsignedByte() != 0xd1 ||
+				patch.readUnsignedByte() != 0xff ||
+				patch.readUnsignedByte() != 0x04) {
+
+				System.err.println("magic string not found, aborting!");
+				source.close(); patch.close(); output.close();
+				return;
+			}
+			i += 5;
+
+			//while (i < patchLength) {
+			while (patch.available() > 0) {
+				// we allways read one byte. This contains the instruction
+				int command = patch.readUnsignedByte();
+				int length = 0; int offset = 0;
+
+				switch (command) {
+					case 0: // end of file
+						break;
+					case 1: // 1 data byte following; append
+						append(1, patch, output); i += 2;
+						break;
+					case 2: // 2 data bytes following; append
+						append(2, patch, output); i += 3;
+						break;
+					case 246: // 246 bytes following; append
+						append(246, patch, output); i += 247;
+						break;
+					case 247: // ushort, n bytes following; append
+						length = patch.readUnsignedShort();
+						append(length, patch, output); i+= length + 3;
+						break;
+					case 248: // int, n bytes following; append
+						length = patch.readInt();
+						append(length, patch, output); i+= length + 5;
+						break;
+					case 249: // ushort, ubyte following, copy position, length
+						offset = patch.readUnsignedShort();
+						length = patch.readUnsignedByte();
+						copy(offset, length, source, output); i+= 4;
+						break;
+					case 250: // ushort, ushort following, copy position, length
+						offset = patch.readUnsignedShort();
+						length = patch.readUnsignedShort();
+						copy(offset, length, source, output);  i+= 5;
+						break;
+					case 251: // ushort, int following, copy position, length
+						offset = patch.readUnsignedShort();
+						length = patch.readInt();
+						copy(offset, length, source, output); i+= 7;
+						break;
+					case 252: // int, ubyte following, copy position, length
+						offset = patch.readInt();
+						length = patch.readUnsignedByte();
+						copy(offset, length, source, output); i+= 8;
+						break;
+					case 253: // int, ushort following, copy position, length
+						offset = patch.readInt();
+						length = patch.readUnsignedShort();
+						copy(offset, length, source, output); i+= 7;
+						break;
+					case 254: // int, int following; copy position, length
+						offset = patch.readInt();
+						length = patch.readInt();
+						copy(offset, length, source, output); i+= 9;
+						break;
+					case 255: // long, int following; copy position, length
+						long loffset = patch.readLong();
+						length = patch.readInt();
+						copy(loffset, length, source, output); i+= 13;
+						break;
+					default: // 2 < buf[0] < 246 bytes following; append
+						append(command, patch, output); i+= command + 1;
+						break;
+				}
+			}
+		}                                                           //gls031504a
+		//gls031504a start
+		catch (Exception e)
+		{
+		    throw e;
+		}
+		finally
+		{
+			output.flush();
+			source.close(); patch.close(); output.close();
+		}
+		//gls031504a end
     }
-    
-    
-    protected void copy(long offset, int length, RandomAccessFile source, OutputStream output) throws IOException {
-        if (offset+length > source.length()) {
-            System.err.println("truncated source file, aborting!");
-            return;
+
+
+    protected void copy(long offset, int length, RandomAccessFile source, OutputStream output)
+		throws IOException, Exception                               //gls031504a
+	{
+        if (offset+length > source.length())
+		{
+			throw new Exception("truncated source file, aborting"); //gls031504a
         }
         byte buf[] = new byte[256];
         source.seek(offset);
@@ -148,7 +169,7 @@ public class GDiffPatcher {
             for (int sx = 0; sx < len; sx++)
                 if (buf[sx] == '\n')
                     System.err.print("\\n");
-                else               
+                else
                     System.out.print(String.valueOf((char)((char) buf[sx])));
             System.out.println("");
 	    */
@@ -156,7 +177,7 @@ public class GDiffPatcher {
             length -= len;
         }
     }
-    
+
     protected void append(int length, InputStream patch, OutputStream output) throws IOException {
         byte buf[] = new byte[256];
         while (length > 0) {
@@ -167,7 +188,7 @@ public class GDiffPatcher {
             for (int sx = 0; sx < len; sx++)
                 if (buf[sx] == '\n')
                     System.err.print("\\n");
-                else               
+                else
                     System.out.print(String.valueOf((char)((char) buf[sx])));
             System.out.println("");
 	    */
@@ -175,10 +196,10 @@ public class GDiffPatcher {
             length -= len;
         }
     }
-    
+
     // sample program to compute the difference between two input files.
     public static void main(String argv[]) {
-        
+
         if (argv.length != 3) {
             System.err.println("usage GDiffPatch source patch output");
             System.err.println("aborting..");
@@ -188,7 +209,7 @@ public class GDiffPatcher {
             File sourceFile = new File(argv[0]);
             File patchFile = new File(argv[1]);
             File outputFile = new File(argv[2]);
-            
+
             if (sourceFile.length() > Integer.MAX_VALUE ||
             patchFile.length() > Integer.MAX_VALUE) {
                 System.err.println("source or patch is too large, max length is " + Integer.MAX_VALUE);
@@ -196,11 +217,11 @@ public class GDiffPatcher {
                 return;
             }
             GDiffPatcher patcher = new GDiffPatcher(sourceFile, patchFile, outputFile);
-            
-            System.err.println("finished patching file");
-            
-        } catch (IOException ioe) {
-            System.err.println("error while patching; " + ioe);
+
+            System.out.println("finished patching file");
+
+        } catch (Exception ioe) {                                   //gls031504a
+            System.err.println("error while patching: " + ioe);
         }
     }
 }

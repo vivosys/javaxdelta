@@ -20,6 +20,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
+ * Change Log:
+ * iiimmddyyn  nnnnn  Description
+ * ----------  -----  -------------------------------------------------------
+ * gls100603a         Fix from Torgeir Veimo            
  */
 
 package com.nothome.delta;
@@ -132,7 +136,13 @@ public class GDiffWriter implements DiffWriter {
         buflen = 0;
     }
     
-    public void flush() throws IOException { if (buflen > 0) writeBuf(); output.flush(); }
+    public void flush() throws IOException 
+    { 
+    	if (buflen > 0) 
+    		writeBuf(); 
+		buflen = 0;		//gls100603a Fix from Torgeir Veimo
+    	output.flush(); 
+    }
     public void close() throws IOException { this.flush();  }
 }
 
