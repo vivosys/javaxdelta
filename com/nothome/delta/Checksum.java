@@ -30,23 +30,20 @@
 package com.nothome.delta;
 
 import java.io.*;
-import java.util.*;
-
-import cmp.Primes.*; // Please note that this package has a slightly different copyright style.
 
 public class Checksum {
-
+    
     public static final int BASE = 65521;
     public static final int S = (1 << 4); // 16
-
+    
     public static boolean debug = false;
-
+    
     protected int hashtable[];
     protected long checksums[];
     protected int prime;
-
+    
     public Checksum() { }
-
+    
     protected static final char single_hash[] = {
         /* Random numbers generated using SLIB's pseudo-random number generator. */
         0xbcd1, 0xbb65, 0x42c2, 0xdffe, 0x9666, 0x431b, 0x8504, 0xeb46,
@@ -82,8 +79,8 @@ public class Checksum {
         0x6d71, 0xe37d, 0xb697, 0x2c4f, 0x4373, 0x9102, 0x075d, 0x8e25,
         0x1672, 0xec28, 0x6acb, 0x86cc, 0x186e, 0x9414, 0xd674, 0xd1a5
     };
-
-
+    
+    
     /**
      * assumes the buffer is of length S
      */
@@ -95,7 +92,7 @@ public class Checksum {
         }
         return ((high & 0xffff) << 16) | (low & 0xffff);
     }
-
+    
     public static long incrementChecksum(long checksum, byte out, byte in) {
         char old_c = single_hash[out+128];
         char new_c = single_hash[in+128];
@@ -103,7 +100,7 @@ public class Checksum {
         int high  = ((int)((checksum) >> 16) - (old_c * S) + low) & 0xffff;
         return (high << 16) | (low & 0xffff);
     }
-
+    
     public static int generateHash(long checksum) {
         long high = (checksum >> 16) & 0xffff;
         long low = checksum & 0xffff;
@@ -111,7 +108,7 @@ public class Checksum {
         int hash = (int) (it ^ high ^ low);
         return hash > 0 ? hash : -hash;
     }
-
+    
     /**
      * Initialize checksums for source. The checksum for the S bytes at offset
      * S * i is inserted into an array at index i.
@@ -120,81 +117,92 @@ public class Checksum {
      *
      */
     public void generateChecksums(File sourceFile, int length) throws IOException {
-
-        InputStream is = new BufferedInputStream(new FileInputStream(sourceFile));
-        int checksumcount = (int)sourceFile.length() / S;
-		if (debug)  //gls031504
+        FileInputStream fis = new FileInputStream(sourceFile);
+        try {
+            generateChecksums(fis, length);
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            fis.close();
+        }
+    }
+    
+    public void generateChecksums(InputStream sis, int length) throws IOException {
+        
+        InputStream is = new BufferedInputStream(sis);
+        //int checksumcount = (int)sourceFile.length() / S;
+        int checksumcount = (int) length / S;
+        if (debug)  //gls031504
             System.out.println("generating checksum array of size " + checksumcount);
-
+        
         checksums = new long[checksumcount];
         hashtable = new int[checksumcount];
         prime = findClosestPrime(checksumcount);
-
-		if (debug)  //gls031504
-	        System.out.println("using prime " + prime);
-
+        
+        if (debug)  //gls031504
+            System.out.println("using prime " + prime);
+        
         // generate cheksums at each interval
         for (int i = 0; i < checksumcount; i++) {
-
+            
             byte buf[] = new byte[S];
-
+            
             is.read(buf, 0, S);
-
+            
             checksums[i] = queryChecksum(buf, S);
         }
-        is.close();
-
+        
         // generate hashtable entries for all checksums
         for (int i = 0; i < checksumcount; i++) hashtable[i] = -1;
-
+        
         for (int i = 0; i < checksumcount; i++) {
             int hash = generateHash(checksums[i]) % prime;
-			if (debug)
-				System.out.println("checking with hash: " + hash);
+            if (debug)
+                System.out.println("checking with hash: " + hash);
             if (hashtable[hash] != -1) {
-				if (debug)
-					System.out.println("hash table collision for index " + i);
+                if (debug)
+                    System.out.println("hash table collision for index " + i);
             } else {
                 hashtable[hash] = i;
-			}
+            }
         }
         //System.out.println("checksums : " + printLongArray(checksums));
         //System.out.println("hashtable : " + printIntArray(hashtable));
     }
-
+    
     public int findChecksumIndex(long checksum) {
         return hashtable[generateHash(checksum) % prime];
     }
-
-    public static int findClosestPrime(int size) {
-        // since it is used only one, we initialize the prime number generator here
-        Primes primes = new Primes(size);
-        return primes.below(size);
+    
+    private static int findClosestPrime(int size) {
+        int prime = EratosthenesPrimes.below(size);
+        
+        return (prime < 2) ? 1 : prime;
     }
-
+    
     private String printIntArray(int[] a) {
         String result = "";
-		result += "[";
-		for (int i = 0; i < a.length; i++) {
-			result += a[i];
-			if (i != (a.length - 1))
-				result += ",";
-			else
-				result += "]";
-		}
-		return result;
-	}
-
+        result += "[";
+        for (int i = 0; i < a.length; i++) {
+            result += a[i];
+            if (i != (a.length - 1))
+                result += ",";
+            else
+                result += "]";
+        }
+        return result;
+    }
+    
     private String printLongArray(long[] a) {
-		String result = "";
-		result += "[";
-		for (int i = 0; i < a.length; i++) {
-			result += a[i];
-			if (i != (a.length - 1))
-				result += ",";
-			else
-				result += "]";
-		}
-		return result;
-	}
+        String result = "";
+        result += "[";
+        for (int i = 0; i < a.length; i++) {
+            result += a[i];
+            if (i != (a.length - 1))
+                result += ",";
+            else
+                result += "]";
+        }
+        return result;
+    }
 }

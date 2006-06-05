@@ -16,7 +16,7 @@
         
         <echo message="compiling..."/>
         
-        <javac debug="true" destdir="${classes.dir}" srcdir=".">
+        <javac debug="true" target="1.1" source="1.1" destdir="${classes.dir}" srcdir="." includes="com/nothome/delta/*.java">
             <!-- To add something to the classpath: -->
             <classpath>
                 <!--<pathelement location="${lib.dir}/mail.jar"/>-->
@@ -25,6 +25,24 @@
         <echo message="compile done!"/>
     </target>
     
+    <target name="test" depends="all">
+       <echo message="compile tests... (requires junit/ant integration!)"/>
+        <javac debug="true" destdir="${classes.dir}" srcdir="test" >
+            <!-- To add something to the classpath: -->
+        </javac>
+        <echo message="start testing..."/>
+        <junit printsummary="yes" haltonfailure="yes">
+           <classpath>
+               <pathelement location="${classes.dir}"/>
+           </classpath>
+           <formatter type="plain"/>
+           <test name="com.nothome.delta.BitArrayTest" />
+           <test name="com.nothome.delta.EratosthenesPrimesTest" />
+           <test name="com.nothome.delta.DeltaDiffPatchTestSuite"/>
+        </junit>
+       <echo message="test done!" />
+    </target>
+
     <target name="clean" depends="init" description="Clean all build products.">
         <delete dir="${classes.dir}"/>
     </target>
