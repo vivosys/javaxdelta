@@ -45,7 +45,7 @@ public class Delta {
     }
     
     static public void computeDelta(SeekableSource source, InputStream targetIS, int targetLength, DiffWriter output)
-    throws IOException, Exception {
+    throws IOException, DeltaException {
         
         int sourceLength = (int) source.length();
         int targetidx = 0;
@@ -74,7 +74,7 @@ public class Delta {
         
         if (targetLength - targetidx <= S) {
             //gls031504a start
-            throw new Exception("Unable to compute delta, input file is too short");
+            throw new DeltaException("Unable to compute delta, input file is too short");
             //gls031504a end
         }
         
@@ -230,13 +230,13 @@ public class Delta {
     }
     
     static public void computeDelta(byte[] source, InputStream targetIS, int targetLength, DiffWriter output)
-    throws IOException, Exception {
+    throws IOException, DeltaException {
         computeDelta(new ByteArraySeekableSource(source), targetIS, targetLength,output);
     }
     static public void computeDelta(File sourceFile,
             File targetFile,
             DiffWriter output)
-            throws IOException, Exception                               //gls031504a
+            throws IOException, DeltaException                               //gls031504a
     {
         int targetLength = (int) targetFile.length();
         SeekableSource source = new RandomAccessFileSeekableSource(new RandomAccessFile(sourceFile, "r"));
@@ -245,7 +245,7 @@ public class Delta {
             computeDelta(source, targetIS, targetLength, output);
         } catch (IOException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (DeltaException e) {
             throw e;
         } finally {
             output.flush();

@@ -41,7 +41,7 @@ import java.io.*;
 public class GDiffPatcher {
 
     public GDiffPatcher(File sourceFile, File patchFile, File outputFile)
-		throws IOException, Exception                               //gls031504a
+		throws IOException, PatchException                               //gls031504a
 	{
         RandomAccessFileSeekableSource source =new RandomAccessFileSeekableSource(new RandomAccessFile(sourceFile, "r")); 
         InputStream patch = new FileInputStream(patchFile);
@@ -50,7 +50,7 @@ public class GDiffPatcher {
             runPatch(source, patch, output);
         } catch (IOException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (PatchException e) {
             throw e;
         } finally {
             source.close();
@@ -58,15 +58,15 @@ public class GDiffPatcher {
             output.close();
         }
     }
-    public GDiffPatcher(byte[] source, InputStream patch, OutputStream output) throws IOException,Exception{
+    public GDiffPatcher(byte[] source, InputStream patch, OutputStream output) throws IOException, PatchException{
         this(new ByteArraySeekableSource(source), patch, output);
     }
     
-    public GDiffPatcher(SeekableSource source, InputStream patch, OutputStream out) throws IOException, Exception {
+    public GDiffPatcher(SeekableSource source, InputStream patch, OutputStream out) throws IOException, PatchException {
         runPatch(source, patch, out);
     }
     
-    static private void runPatch(SeekableSource source, InputStream patch, OutputStream out) throws IOException, Exception {
+    static private void runPatch(SeekableSource source, InputStream patch, OutputStream out) throws IOException, PatchException {
         
         DataOutputStream outOS = new DataOutputStream(out);
         DataInputStream patchIS = new DataInputStream(patch);
@@ -160,7 +160,7 @@ public class GDiffPatcher {
 			}
 		}                                                           //gls031504a
 		//gls031504a start
-		catch (Exception e)
+		catch (PatchException e)
 		{
 		    throw e;
 		}
@@ -173,11 +173,11 @@ public class GDiffPatcher {
 
 
     static protected void copy(long offset, int length, SeekableSource source, OutputStream output)
-		throws IOException, Exception                               //gls031504a
+		throws IOException, PatchException                               //gls031504a
 	{
         if (offset+length > source.length())
 		{
-			throw new Exception("truncated source file, aborting"); //gls031504a
+			throw new PatchException("truncated source file, aborting"); //gls031504a
         }
         byte buf[] = new byte[256];
         source.seek(offset);
