@@ -24,7 +24,19 @@
         </javac>
         <echo message="compile done!"/>
     </target>
-    
+
+    <target name="jar" depends="all">
+    <!-- sources and classes -->
+       <jar destfile="javaxdelta.jar" 
+            basedir="${basedir}"
+            includes="com/**/*.java"/>
+       <jar destfile="javaxdelta.jar" update="true" 
+            basedir="${basedir}/classes" 
+            includes="**/*.class" 
+            excludes="**/*Test.class" />
+    </target>    
+
+
     <target name="test" depends="all">
        <echo message="compile tests... (requires junit/ant integration!)"/>
         <javac debug="true" destdir="${classes.dir}" srcdir="test" >
@@ -45,5 +57,9 @@
 
     <target name="clean" depends="init" description="Clean all build products.">
         <delete dir="${classes.dir}"/>
+        <delete file="javaxdelta.jar" />
+        <delete>
+            <fileset dir="${basedir}" includes="TEST-*.txt"/>
+        </delete>
     </target>
 </project>
