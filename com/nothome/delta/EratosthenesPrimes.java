@@ -89,6 +89,7 @@ public class EratosthenesPrimes {
         if (maxNumber == 2) {
             return new int[]{2};
         }
+	init(maxNumber);
         int[] primes = new int[primesNo];
         int maxNumber_2 = (maxNumber-1) >> 1;
         int prime = 0;
@@ -126,7 +127,8 @@ public class EratosthenesPrimes {
     synchronized static public int belowOrEqual(int number) {
         if (number < 2) return -1;
         if (number == 2) return 2;
-        int maxNumber_2 = (number-1) >> 1;
+	init(number);
+        int maxNumber_2  = (number-1) >> 1;
         for (int i = maxNumber_2; i > 0; i--) {
             if (! sieve.get(i)) {
                 return ((i << 1) + 1);
