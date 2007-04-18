@@ -6,9 +6,6 @@ This library implements Josh MacDonalds xdelta binary diff algorithm in java.
 More information on this algorithm can be found at 
 http://sourceforge.net/projects/xdelta.
 
-Included is some java code for finding primes copyrighted by Roedy Green.
-See separate copyright note for that code in the file cmp/primes/Primes.use.
-
 This implementation uses the GDIFF file format for storing binary deltas. 
 There is also a patcher that takes a source file and a patch file in this
 format and produces the original file.
