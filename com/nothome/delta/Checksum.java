@@ -175,7 +175,7 @@ public class Checksum {
     }
     
     private static int findClosestPrime(int size) {
-        int prime = EratosthenesPrimes.below(size);
+        int prime = (int) SimplePrime.belowOrEqual(size - 1);
         
         return (prime < 2) ? 1 : prime;
     }

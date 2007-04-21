@@ -27,7 +27,7 @@ public class EratosthenesPrimesTest extends TestCase {
     }
 
     public void testInit() {
-        int maxNumber = 1000000;
+        int maxNumber = 10000000;
         EratosthenesPrimes.init(maxNumber);
         assertTrue(EratosthenesPrimes.lastInit >= maxNumber);
     }

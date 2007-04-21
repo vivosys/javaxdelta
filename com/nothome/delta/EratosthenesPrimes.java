@@ -19,8 +19,6 @@ import java.util.Arrays;
  * the sieve with a number larger than the largest number you are looking
  * for.
  *
- * The algorithm should be among the fastest in integer range.
- *
  * The implementation will stores the complete sieve (this is more memory efficient than
  * storing the primes).
  * This can require a  some memory! (256MB for all ~100mio. primes up to MAX_INTEGER).
@@ -72,7 +70,8 @@ public class EratosthenesPrimes {
                 //if (!sieve[i]) {
                 // 2*i+1 is now a prime for sure
                 int currentPrime = (i<<1) + 1;
-                for (int j = i+currentPrime; j <= maxNumber; j += currentPrime) {
+                // n^2+2kn
+                for (int j = i*((i<<1)+2); j <= maxNumber; j += currentPrime) {
                     sieve.set(j, true);
                     //sieve[j] = true;
                 }
@@ -80,7 +79,7 @@ public class EratosthenesPrimes {
         }
         
     }
-    
+
     synchronized static public int[] getPrimes(int maxNumber) {
         int primesNo = primesCount(maxNumber);
         if (primesNo <= 0) {
