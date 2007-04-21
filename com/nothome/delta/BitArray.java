@@ -14,14 +14,15 @@ package com.nothome.delta;
 public class BitArray {
     int[] implArray;
     int size;
+    final static int INT_SIZE = 32;
     /** Creates a new instance of BitArray */
     public BitArray(int size) {
-        int implSize = (int) (size / Integer.SIZE) + 1;
+        int implSize = (int) (size / INT_SIZE) + 1;
         implArray = new int[implSize];
     }
     public void set(int pos, boolean value) {
-        int implPos = (int) (pos / Integer.SIZE);
-        int bitMask = 1 << (pos & (Integer.SIZE - 1));            
+        int implPos = (int) (pos / INT_SIZE);
+        int bitMask = 1 << (pos & (INT_SIZE - 1));            
         if (value) {
             implArray[implPos] |= bitMask; // set true if true
         } else {
@@ -30,8 +31,8 @@ public class BitArray {
     }
     
     public boolean get(int pos) {
-        int implPos = (int) (pos / Integer.SIZE);
-        int bitMask = 1 << (pos & (Integer.SIZE - 1));
+        int implPos = (int) (pos / INT_SIZE);
+        int bitMask = 1 << (pos & (INT_SIZE - 1));
         return (implArray[implPos] & bitMask) != 0;
     }
     
