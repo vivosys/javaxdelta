@@ -51,6 +51,7 @@
            <test name="com.nothome.delta.BitArrayTest" />
            <test name="com.nothome.delta.EratosthenesPrimesTest" />
            <test name="com.nothome.delta.DeltaDiffPatchTestSuite"/>
+           <test name="com.nothome.delta.DeltaDiffPatchBoundariesTest"/>
         </junit>
        <echo message="test done!" />
     </target>

@@ -77,6 +77,9 @@ public class Delta {
             throw new DeltaException("Unable to compute delta, input file is too short");
             //gls031504a end
         }
+        if (sourceLength <= S) {
+            throw new DeltaException("Unable to compute delta, source file is too short");
+        }
         
         // initialize first complete checksum.
         int bytesRead = target.read(buf, 0, S);
