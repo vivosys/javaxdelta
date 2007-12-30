@@ -16,7 +16,7 @@
         
         <echo message="compiling..."/>
         
-        <javac debug="true" target="1.1" source="1.1" destdir="${classes.dir}" srcdir="." includes="com/nothome/delta/*.java">
+        <javac debug="true" target="1.2" source="1.2" destdir="${classes.dir}" srcdir="." includes="com/nothome/delta/*.java">
             <!-- To add something to the classpath: -->
             <classpath>
                 <!--<pathelement location="${lib.dir}/mail.jar"/>-->
