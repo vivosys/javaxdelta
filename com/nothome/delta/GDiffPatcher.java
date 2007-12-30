@@ -202,7 +202,7 @@ public class GDiffPatcher {
         byte buf[] = new byte[256];
         while (length > 0) {
             int len = length > 256 ? 256 : length;
-            patch.read(buf, 0, len);
+	    int res = patch.read(buf, 0, len);
 	    /*
             System.out.print("append:");
             for (int sx = 0; sx < len; sx++)
@@ -212,8 +212,8 @@ public class GDiffPatcher {
                     System.out.print(String.valueOf((char)((char) buf[sx])));
             System.out.println("");
 	    */
-            output.write(buf, 0, len);
-            length -= len;
+            output.write(buf, 0, res);
+            length -= res;
         }
     }
 
