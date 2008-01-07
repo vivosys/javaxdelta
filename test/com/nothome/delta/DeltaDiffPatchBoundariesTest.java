@@ -25,11 +25,11 @@ import junit.framework.TestCase;
 public class DeltaDiffPatchBoundariesTest extends TestCase {
 
 	public void testCase1() throws Exception {
-		assertFalse( run( "0123456789abcdef", "0123456789abcdef" ) );
+		assertTrue( run( "0123456789abcdef", "0123456789abcdef" ) );
 	}
 
 	public void testCase2() throws Exception {
-		assertFalse( run( "0123456789abcdef", "0123456789abcdef+" ) );
+		assertTrue( run( "0123456789abcdef", "0123456789abcdef+" ) );
 	}
 
 	public void testCase3() throws Exception {
@@ -40,7 +40,12 @@ public class DeltaDiffPatchBoundariesTest extends TestCase {
 		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef0123456789abcdef+" ) );
 	}
 
-	private boolean run( String string1, String string2 ) throws Exception {
+        public void testCase5() throws Exception {
+		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef" ) );
+	}
+
+        
+        private boolean run( String string1, String string2 ) throws Exception {
 		File test1File = new File( "test1.txt" );
 		File test2File = new File( "test2.txt" );
 
@@ -71,14 +76,13 @@ public class DeltaDiffPatchBoundariesTest extends TestCase {
 			String got = new String( buf );
 			assertEquals( string2, got );
 		} catch ( DeltaException e ) {
-			e.printStackTrace();
-			return false;
-		}
-
-		test1File.delete();
-		test2File.delete();
-		deltaFile.delete();
-		patchedFile.delete();
+			throw e;
+		} finally {
+                    test1File.delete();
+                    test2File.delete();
+                    deltaFile.delete();
+                    patchedFile.delete();
+                }
 		return true;
 	}
 

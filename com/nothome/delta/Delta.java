@@ -48,7 +48,6 @@ public class Delta {
     throws IOException, DeltaException {
         
         int sourceLength = (int) source.length();
-        int targetidx = 0;
         
         Checksum checksum = new Checksum();
         
@@ -72,18 +71,20 @@ public class Delta {
         byte b[] = new byte[1];
         byte sourcebyte[] = new byte[S];
         
-        if (targetLength - targetidx <= S) {
-            //gls031504a start
-            throw new DeltaException("Unable to compute delta, input file is too short");
-            //gls031504a end
-        }
-        if (sourceLength <= S) {
-            throw new DeltaException("Unable to compute delta, source file is too short");
+        if (targetLength <= S || sourceLength <= S) {
+            // simply return the complete target as diff
+            int readBytes;
+            while ((readBytes = target.read(buf)) >= 0) {
+                for (int i = 0; i < readBytes; i++) {
+                    output.addData(buf[i]);
+                }
+            }
+            return;
         }
         
         // initialize first complete checksum.
         int bytesRead = target.read(buf, 0, S);
-        targetidx += S;
+        int targetidx = bytesRead;
         
         hashf = checksum.queryChecksum(buf, S);
         
