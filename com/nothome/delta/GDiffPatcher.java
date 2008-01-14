@@ -1,6 +1,7 @@
 /*
  *
  * Copyright (c) 2001 Torgeir Veimo
+ * Copyright (c) 2006 Heiko Klein
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -183,7 +184,7 @@ public class GDiffPatcher {
         source.seek(offset);
         while (length > 0) {
             int len = length > 256 ? 256 : length;
-            source.read(buf, 0, len);
+            int res = source.read(buf, 0, len);
 	    /*
             System.out.print("copy: " + offset + ", " + length + ":");
             for (int sx = 0; sx < len; sx++)
@@ -193,8 +194,8 @@ public class GDiffPatcher {
                     System.out.print(String.valueOf((char)((char) buf[sx])));
             System.out.println("");
 	    */
-            output.write(buf, 0, len);
-            length -= len;
+            output.write(buf, 0, res);
+            length -= res;
         }
     }
 
