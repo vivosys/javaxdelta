@@ -16,7 +16,7 @@
         
         <echo message="compiling..."/>
         
-        <javac debug="true" target="1.2" source="1.2" destdir="${classes.dir}" srcdir="." includes="com/nothome/delta/*.java">
+        <javac debug="true" target="1.2" source="1.2" destdir="${classes.dir}" srcdir="." includes="com/nothome/delta/*.java,at/spardat/xma/xdelta/*.java">
             <!-- To add something to the classpath: -->
             <classpath>
                 <!--<pathelement location="${lib.dir}/mail.jar"/>-->
@@ -52,6 +52,7 @@
            <test name="com.nothome.delta.EratosthenesPrimesTest" />
            <test name="com.nothome.delta.DeltaDiffPatchTestSuite"/>
            <test name="com.nothome.delta.DeltaDiffPatchBoundariesTest"/>
+	   <test name="at.spardat.xma.xdelta.test.JarDeltaJarPatcherTest"/>
         </junit>
        <echo message="test done!" />
     </target>
