@@ -27,7 +27,6 @@
 package com.nothome.delta;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * This is a wrapper interface which presents the functions use in
