@@ -63,6 +63,10 @@ public class DeltaDiffPatchBoundariesTest extends TestCase {
 		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef" ) );
 	}
 
+        public void testCase6() throws Exception {
+		assertTrue( run( "Seite reserviert. Hier soll demnächst etwas über mich stehen.", "Seite reserviert. Hier soll demnächst etwas über mich stehen. (Test der Umlaute)" ) );
+	}
+
         
         private boolean run( String string1, String string2 ) throws Exception {
 		File test1File = new File( "test1.txt" );
@@ -88,8 +92,8 @@ public class DeltaDiffPatchBoundariesTest extends TestCase {
 			new GDiffPatcher( test1File, deltaFile, patchedFile );
 			assertTrue( patchedFile.exists() );
 
-			assertEquals( patchedFile.length(), string2.length() );
-			byte[] buf = new byte[string2.length()];
+			assertEquals( patchedFile.length(), string2.getBytes().length );
+			byte[] buf = new byte[string2.getBytes().length];
 			new FileInputStream( patchedFile ).read( buf );
 
 			String got = new String( buf );
