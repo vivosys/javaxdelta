@@ -3,7 +3,7 @@
 
     <target name="init">
         <property file="build.properties"/>
-        
+
         <property name="Name" value="Java Xdelta"/>
 
         <echo message="user home is set to ${user.home}"/>
@@ -13,28 +13,47 @@
     <target name="all" depends="init">
         <!-- create output directory for build -->
         <mkdir dir="${classes.dir}"/>
-        
+
         <echo message="compiling..."/>
-        
+
         <javac debug="true" target="1.2" source="1.2" destdir="${classes.dir}" srcdir="." includes="com/nothome/delta/*.java,at/spardat/xma/xdelta/*.java">
             <!-- To add something to the classpath: -->
             <classpath>
                 <!--<pathelement location="${lib.dir}/mail.jar"/>-->
-            </classpath> 
+            </classpath>
         </javac>
         <echo message="compile done!"/>
     </target>
 
+    <!--
+        generates full jar file containing classes and sources
+    -->
     <target name="jar" depends="all">
     <!-- sources and classes -->
-       <jar destfile="javaxdelta.jar" 
+       <jar destfile="javaxdelta.jar"
             basedir="${basedir}"
-            includes="com/**/*.java"/>
-       <jar destfile="javaxdelta.jar" update="true" 
-            basedir="${basedir}/classes" 
-            includes="**/*.class" 
+            includes="com/**/*.java,at/**/*.java"/>
+       <jar destfile="javaxdelta.jar" update="true"
+            basedir="${basedir}/classes"
+            includes="**/*.class"
             excludes="**/*Test.class" />
-    </target>    
+    </target>
+
+    <!--
+        generates seperate jar and -src.zip files suitable for maven repository
+    -->
+    <target name="maven-jars" depends="all">
+        <mkdir dir="mvn" />
+    <!-- source-zip -->
+       <zip destfile="mvn/javaxdelta-src.zip"
+            basedir="${basedir}"
+            includes="com/**/*.java,at/**/*.java"/>
+    <!-- jar-file -->
+       <jar destfile="mvn/javaxdelta.jar"
+            basedir="${basedir}/classes"
+            includes="**/*.class"
+            excludes="**/*Test.class" />
+    </target>
 
 
     <target name="test" depends="all">
@@ -60,6 +79,7 @@
     <target name="clean" depends="init" description="Clean all build products.">
         <delete dir="${classes.dir}"/>
         <delete file="javaxdelta.jar" />
+        <delete dir="mvn" failonerror="false"/>
         <delete>
             <fileset dir="${basedir}" includes="TEST-*.txt"/>
         </delete>
