@@ -446,13 +446,4 @@ public class JarDeltaJarPatcherTest extends TestCase {
         testJarPatcherIdentFile();
     }
 
-    /**
-     * Method main.
-     */
-    public static void main(String[] args) {
-
-        junit.awtui.TestRunner.main(new String[] { JarDeltaJarPatcherTest.class.getName(),
-                "-noloading" });
-    }
-
 }
