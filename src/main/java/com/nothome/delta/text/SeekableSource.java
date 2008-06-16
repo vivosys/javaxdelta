@@ -1,9 +1,5 @@
 /*
- * BitArrayTest.java
- * JUnit based test
- *
- * Created on May 18, 2006, 9:50 AM
- * Copyright (c) 2006 Heiko Klein
+ * Copyright (c) 2008 Elias Ross
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,36 +18,21 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
  */
 
-package com.nothome.delta;
+package com.nothome.delta.text;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-import junit.framework.*;
+import java.io.Closeable;
+import java.io.IOException;
 
 /**
- *
- * @author Heiko Klein
+ * Text seekable source
+ * 
+ * @author Elias Ross
  */
-public class BitArrayTest {
-    BitArray ba = new BitArray(100);
+public interface SeekableSource extends Readable, Closeable {
     
-    /**
-     * Test of set method, of class com.nothome.delta.BitArray.
-     */
-    @Test
-    public void testSet() {
-        ba.set(56, true);
-        assertTrue(ba.get(56));
-        
-        ba.set(56, false);
-        assertFalse(ba.get(56));
-        
-        
-    }
-
+    public void seek(long pos) throws IOException;
     
 }

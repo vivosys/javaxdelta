@@ -206,4 +206,8 @@ public class Checksum {
         }
         return result;
     }
+
+    public static char[] getSingleHash() {
+        return single_hash;
+    }
 }

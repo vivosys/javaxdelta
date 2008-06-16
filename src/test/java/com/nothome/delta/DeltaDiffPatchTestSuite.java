@@ -26,6 +26,8 @@
 
 package com.nothome.delta;
 
+import static org.junit.Assert.*;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,21 +37,23 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import junit.framework.*;
 
 /**
  *
  * @author Heiko Klein
  */
-public class DeltaDiffPatchTestSuite extends TestCase {
+public class DeltaDiffPatchTestSuite {
     String test1 = "Dies ist ein kleiner Test\n";
     String test2 = "Dies ist ein kleiner Test xx\nDiesmal modifiziert\n";
     
-    public DeltaDiffPatchTestSuite(String testName) {
-        super(testName);
-    }
-
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         OutputStream os = new FileOutputStream(new File("test1.txt"));
         os.write(test1.getBytes());
         os.close();
@@ -58,13 +62,15 @@ public class DeltaDiffPatchTestSuite extends TestCase {
         os.close();
     }
 
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         (new File("test1.txt")).delete();
         (new File("test2.txt")).delete();
         (new File("delta")).delete();
         (new File("patchedFile.txt")).delete();
     }
 
+    @Test
     public void testDeltaFile() {
         try {
             File test1File = new File("test1.txt");
@@ -80,7 +86,7 @@ public class DeltaDiffPatchTestSuite extends TestCase {
             new GDiffPatcher(test1File, delta, patchedFile);
             assertTrue(patchedFile.exists());
  
-            assertEquals(patchedFile.length(), test2.length());
+            assertEquals(patchedFile.length(), (long)test2.length());
             byte[] buf = new byte[test2.length()];
             (new FileInputStream(patchedFile)).read(buf);
             
@@ -91,6 +97,7 @@ public class DeltaDiffPatchTestSuite extends TestCase {
         }
     }
     
+    @Test
     public void testDeltaSeekableSource() {
         try {
             File test1File = new File("test1.txt");
@@ -110,7 +117,7 @@ public class DeltaDiffPatchTestSuite extends TestCase {
             output.close();
             
             byte[] deltaBytes = deltaOS.toByteArray();
-            assertEquals(deltaBytes.length, delta.length());
+            assertEquals(deltaBytes.length, (int)delta.length());
             byte[] fileDeltaBytes = new byte[deltaBytes.length];
             (new FileInputStream(delta)).read(fileDeltaBytes);
             assertEquals(new String(deltaBytes), new String(fileDeltaBytes));
@@ -124,12 +131,6 @@ public class DeltaDiffPatchTestSuite extends TestCase {
             e.printStackTrace();
             fail();
         }
-    }
-    
-    
-    public static Test suite() {
-        TestSuite suite = new TestSuite(DeltaDiffPatchTestSuite.class);
-        return suite;
     }
     
 }

@@ -1,9 +1,6 @@
 /*
- * BitArrayTest.java
- * JUnit based test
  *
- * Created on May 18, 2006, 9:50 AM
- * Copyright (c) 2006 Heiko Klein
+ * Copyright (c) 2008 Elias Ross
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,36 +19,52 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
+ *
  */
 
-package com.nothome.delta;
+package com.nothome.delta.text;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-import junit.framework.*;
+import java.io.IOException;
+import java.nio.CharBuffer;
 
 /**
- *
- * @author Heiko Klein
+ * Wrapper for a CharBuffer.
  */
-public class BitArrayTest {
-    BitArray ba = new BitArray(100);
+public class CharBufferSeekableSource implements SeekableSource {
+    
+    private CharBuffer cb;
+    private CharBuffer cur;
+
+    /**
+     * Constructs a new CharBufferSeekableSource.
+     */
+    public CharBufferSeekableSource(CharBuffer cb) {
+        if (cb == null)
+            throw new NullPointerException("cb");
+        this.cb = cb;
+        cur = cb;
+    }
     
     /**
-     * Test of set method, of class com.nothome.delta.BitArray.
+     * Constructs a new CharBufferSeekableSource from a char sequence (String).
      */
-    @Test
-    public void testSet() {
-        ba.set(56, true);
-        assertTrue(ba.get(56));
-        
-        ba.set(56, false);
-        assertFalse(ba.get(56));
-        
-        
+    public CharBufferSeekableSource(CharSequence seq) {
+        this(CharBuffer.wrap(seq));
     }
 
-    
+    public void seek(long pos) throws IOException {
+        cb.rewind();
+        cur = cb.slice();
+        if (pos > cur.limit())
+            throw new IllegalArgumentException("pos " + pos + " cannot seek " + cur.limit());
+        cur.position((int) pos);
+    }
+
+    public int read(CharBuffer charbuffer) throws IOException {
+        return cur.read(charbuffer);
+    }
+
+    public void close() throws IOException {
+    }
 }

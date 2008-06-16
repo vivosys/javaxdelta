@@ -26,6 +26,9 @@
 
 package com.nothome.delta;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -33,7 +36,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * Testing the boundaries.
@@ -41,29 +44,35 @@ import junit.framework.TestCase;
  * @author Heiko Klein
  * @author Stefan Liebig
  */
-public class DeltaDiffPatchBoundariesTest extends TestCase {
+public class DeltaDiffPatchBoundariesTest {
 
+    @Test
 	public void testCase1() throws Exception {
 		assertTrue( run( "0123456789abcdef", "0123456789abcdef" ) );
 	}
 
+    @Test
 	public void testCase2() throws Exception {
 		assertTrue( run( "0123456789abcdef", "0123456789abcdef+" ) );
 	}
 
+    @Test
 	public void testCase3() throws Exception {
 		assertTrue( run( "0123456789abcdef0", "0123456789abcdef0+" ) );
 	}
 
+    @Test
 	public void testCase4() throws Exception {
 		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef0123456789abcdef+" ) );
 	}
 
-        public void testCase5() throws Exception {
+    @Test
+    public void testCase5() throws Exception {
 		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef" ) );
 	}
 
-        public void testCase6() throws Exception {
+    @Test
+    public void testCase6() throws Exception {
 		assertTrue( run( "Seite reserviert. Hier soll demnächst etwas über mich stehen.", "Seite reserviert. Hier soll demnächst etwas über mich stehen. (Test der Umlaute)" ) );
 	}
 
@@ -92,7 +101,7 @@ public class DeltaDiffPatchBoundariesTest extends TestCase {
 			new GDiffPatcher( test1File, deltaFile, patchedFile );
 			assertTrue( patchedFile.exists() );
 
-			assertEquals( patchedFile.length(), string2.getBytes().length );
+			assertEquals( patchedFile.length(), (long)string2.getBytes().length );
 			byte[] buf = new byte[string2.getBytes().length];
 			new FileInputStream( patchedFile ).read( buf );
 

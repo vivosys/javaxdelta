@@ -3,10 +3,15 @@
   <groupId>com.nothome</groupId>
   <artifactId>javaxdelta</artifactId>
   <version>1.0</version>
-  <description>
-	javaxdelta - Patch generator and patch tool using the GDIFF algorithm
-  </description>
+  <description>javaxdelta - Patch generator and patch tool using the GDIFF algorithm</description>
   <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -31,26 +36,13 @@
         </configuration>
       </plugin>
     </plugins>
-    <extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-         <artifactId>wagon-ssh-external</artifactId>
-         <version>1.0-beta-2</version>
-      </extension>
-    </extensions>
   </build>
   <repositories>
-      <repository>
-         <id>javaxdelta.sourceforge.net</id>
-         <url>http://javaxdelta.sourceforge.net/maven2/repository</url>
-      </repository>
-  </repositories>
-  <distributionManagement>
     <repository>
       <id>javaxdelta.sourceforge.net</id>
-      <url>scp://javaxdelta.sourceforge.net/home/users/j/ja/javaxdelta/htdocs/maven2/repository</url>
+      <url>http://javaxdelta.sourceforge.net/maven2/repository</url>
     </repository>
-  </distributionManagement>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -58,6 +50,16 @@
       <version>4.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>trove</groupId>
+      <artifactId>trove</artifactId>
+      <version>2.1.1</version>
+    </dependency>
   </dependencies>
+  <distributionManagement>
+    <repository>
+      <id>javaxdelta.sourceforge.net</id>
+      <url>scp://javaxdelta.sourceforge.net/home/users/j/ja/javaxdelta/htdocs/maven2/repository</url>
+    </repository>
+  </distributionManagement>
 </project>
-

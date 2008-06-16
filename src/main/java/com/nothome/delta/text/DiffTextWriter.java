@@ -1,9 +1,6 @@
-/*
- * BitArrayTest.java
- * JUnit based test
+/* 
  *
- * Created on May 18, 2006, 9:50 AM
- * Copyright (c) 2006 Heiko Klein
+ * Copyright (c) 2008 Elias Ross
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -12,7 +9,7 @@
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -22,36 +19,43 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
  */
 
-package com.nothome.delta;
+package com.nothome.delta.text;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-import junit.framework.*;
+import java.io.IOException;
 
 /**
- *
- * @author Heiko Klein
+ * Writes characters.
  */
-public class BitArrayTest {
-    BitArray ba = new BitArray(100);
+public interface DiffTextWriter {
     
     /**
-     * Test of set method, of class com.nothome.delta.BitArray.
+     * Add a copy command.
+     * @param offset start of sequence
+     * @param length length of sequence
+     * @throws IOException if copy fails
      */
-    @Test
-    public void testSet() {
-        ba.set(56, true);
-        assertTrue(ba.get(56));
-        
-        ba.set(56, false);
-        assertFalse(ba.get(56));
-        
-        
-    }
-
+    void addCopy(int offset, int length) throws IOException;
     
+    /**
+     * Add a portion of an array of characters to output.
+     * @param seq data to add
+     * @throws IOException
+     */
+	void addData(CharSequence seq) throws IOException;
+	
+	/**
+	 * Writes current state to output stream.
+	 * @throws IOException
+	 */
+    void flush() throws IOException;
+    
+    /**
+     * Frees internal resources; closes output stream.
+     * @throws IOException
+     */
+    void close() throws IOException;
 }
+
