@@ -26,12 +26,16 @@
 
 package com.nothome.delta;
 
+import java.io.IOException;
+
 /**
  *
  * @author Heiko Klein
  */
-public class PatchException extends java.lang.Exception {
+public class PatchException extends IOException {
     
+    private static final long serialVersionUID = 1;
+
     /**
      * Creates a new instance of <code>PatchException</code> without detail message.
      */

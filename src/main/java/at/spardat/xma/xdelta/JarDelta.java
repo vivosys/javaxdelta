@@ -30,7 +30,6 @@ import java.io.*;
 
 import com.nothome.delta.Checksum;
 import com.nothome.delta.Delta;
-import com.nothome.delta.DeltaException;
 import com.nothome.delta.DiffWriter;
 import com.nothome.delta.GDiffWriter;
 
@@ -111,10 +110,6 @@ public class JarDelta {
             ZipEntry listEntry = new ZipEntry("META-INF/file.list");
             output.putNextEntry(listEntry);
             output.write(listBytes.toByteArray());
-        } catch (DeltaException de) {
-            IOException ioe = new IOException();
-            ioe.initCause(de);
-            throw ioe;
         } finally {
             source.close();
             target.close();

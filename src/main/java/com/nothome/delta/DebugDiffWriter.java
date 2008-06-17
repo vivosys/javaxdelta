@@ -34,41 +34,41 @@ package com.nothome.delta;
  * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
  */
 
-import java.util.*;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class DebugDiffWriter implements DiffWriter {
     
-    byte buf[] = new byte[256]; int buflen = 0;
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
     
     public DebugDiffWriter() {}
     
     public void addCopy(int offset, int length) throws IOException {
-        if (buflen > 0)
+        if (os.size() > 0)
             writeBuf();
         System.err.println("COPY off: " + offset + ", len: " + length);
     }
     
-    public void addData(byte b) throws IOException {
-        if (buflen < 256)
-            buf[buflen++] = b;
-        else
-            writeBuf();
+    public void addData(byte[] b, int offset, int length) throws IOException {
+        os.write(b, offset, length);
+        writeBuf();
     }
     private void writeBuf() {
         System.err.print("DATA: ");
-        for (int ix = 0; ix < buflen; ix++) {
-            if (buf[ix] == '\n')
+        byte[] ba = os.toByteArray();
+        for (int ix = 0; ix < ba.length; ix++) {
+            if (ba[ix] == '\n')
                 System.err.print("\\n");
             else
-                System.err.print(String.valueOf((char)((char) buf[ix])));
+                System.err.print(String.valueOf((char)((char) ba[ix])));
             //System.err.print("0x" + Integer.toHexString(buf[ix]) + " "); // hex output
         }
         System.err.println("");
-        buflen = 0;
+        os.reset();
     }
     
     public void flush() throws IOException { }
     public void close() throws IOException { }
+
 }
 

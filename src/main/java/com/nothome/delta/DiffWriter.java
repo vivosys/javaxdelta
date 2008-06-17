@@ -27,13 +27,13 @@ package com.nothome.delta;
 import java.io.IOException;
 
 /**
- *
+ * Interface for DIFF writers.
+ * 
  * @author  torgeir
  */
 public interface DiffWriter {
     public void addCopy(int offset, int length) throws IOException;
-	//public void addInsert(String insertString) throws IOException;
-	public void addData(byte b) throws IOException;
+	public void addData(byte b[], int offset, int length) throws IOException;
     public void flush() throws IOException;
     public void close() throws IOException;
 }

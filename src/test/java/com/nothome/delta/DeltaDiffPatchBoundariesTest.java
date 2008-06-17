@@ -107,8 +107,6 @@ public class DeltaDiffPatchBoundariesTest {
 
 			String got = new String( buf );
 			assertEquals( string2, got );
-		} catch ( DeltaException e ) {
-			throw e;
 		} finally {
                     test1File.delete();
                     test2File.delete();

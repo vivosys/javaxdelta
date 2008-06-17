@@ -20,10 +20,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * Change Log:
- * iiimmddyyn  nnnnn  Description
- * ----------  -----  -------------------------------------------------------
- * gls100603a         Fix from Torgeir Veimo            
  */
 
 package com.nothome.delta;
@@ -34,17 +30,39 @@ package com.nothome.delta;
  * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
  */
 
-import java.util.*;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class GDiffWriter implements DiffWriter {
     
-    byte buf[] = new byte[256]; int buflen = 0;
+    /**
+     * Max length of a chunk.
+     */
+    public static final int CHUNK_SIZE = Short.MAX_VALUE;
+    
+    public static final byte EOF = 0;
+    
+    /**
+     * Max length for single length data encode.
+     */
+    public static final int DATA_MAX = 246;
+    
+    public static final int DATA_USHORT = 247;
+    public static final int DATA_INT = 248;
+    public static final int COPY_USHORT_UBYTE = 249;
+    public static final int COPY_USHORT_USHORT = 250;
+    public static final int COPY_USHORT_INT = 251;
+    public static final int COPY_INT_UBYTE = 252;
+    public static final int COPY_INT_USHORT = 253;
+    public static final int COPY_INT_INT = 254;
+    public static final int COPY_LONG_INT = 255;
+
+    private ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
     protected boolean debug = false;
     
-    //Vector writeQueue = new Vector();
-    DataOutputStream output = null;
+    private DataOutputStream output = null;
     
     public GDiffWriter(DataOutputStream os) throws IOException {
         this.output = os;
@@ -59,90 +77,80 @@ public class GDiffWriter implements DiffWriter {
     public void setDebug(boolean flag) { debug = flag; }
        
     public void addCopy(int offset, int length) throws IOException {
-        if (buflen > 0)
-            writeBuf();
+        writeBuf();
         
         //output debug data        
         if (debug)
             System.err.println("COPY off: " + offset + ", len: " + length);
         
         // output real data
-        byte command;
         if (offset > Integer.MAX_VALUE) {
-            // use long, int format
-            output.writeByte(255);
             // Actually, we don't support longer files than int.MAX_VALUE at the moment..
+            output.writeByte(COPY_LONG_INT);
         } else if (offset < 65536)  {
             if (length < 256) {                
-                // use ushort, ubyte
-                output.writeByte(249);
+                output.writeByte(COPY_USHORT_UBYTE);
                 output.writeShort(offset);
                 output.writeByte(length);
             } else if (length > 65535) {
-                // use ushort, int
-                output.writeByte(251);
+                output.writeByte(COPY_USHORT_INT);
                 output.writeShort(offset);
                 output.writeInt(length);
             } else {
-                // use ushort, ushort
-                output.writeByte(250);
+                output.writeByte(COPY_USHORT_USHORT);
                 output.writeShort(offset);
                 output.writeShort(length);
             }
         } else {
             if (length < 256) {
-                // use int, ubyte
-                output.writeByte(252);
+                output.writeByte(COPY_INT_UBYTE);
                 output.writeInt(offset);
                 output.writeByte(length);
             } else if (length > 65535) {
-                // use int, int
-                output.writeByte(254);
+                output.writeByte(COPY_INT_INT);
                 output.writeInt(offset);
                 output.writeInt(length);
             } else {
-                // use int, ushort
-                output.writeByte(253);
+                output.writeByte(COPY_INT_USHORT);
                 output.writeInt(offset);
                 output.writeShort(length);
             }
         }
     }
     
-    public void addData(byte b) throws IOException {
-        if (buflen >= 246)
+    public void addData(byte[] b, int offset, int length) throws IOException {
+        buf.write(b, offset, length);
+        if (buf.size() >= CHUNK_SIZE)
             writeBuf();
-        buf[buflen] = b; buflen++;
     }
     
     private void writeBuf() throws IOException {
-        // output debug data
-        if (debug) {
-            System.err.print("DATA:");
-            for (int ix = 0; ix < buflen; ix++) {
-                if (buf[ix] == '\n')
-                    System.err.print("\\n");
-                else
-                    System.err.print(String.valueOf((char)((char) buf[ix])));
+        if (buf.size() > 0) {
+            if (buf.size() <= DATA_MAX) {
+                output.writeByte(buf.size());
+            } else if (buf.size() <= 65535) {
+                output.writeByte(DATA_USHORT);
+                output.writeShort(buf.size());
+            } else {
+                output.writeByte(DATA_INT);
+                output.writeInt(buf.size());
             }
-            System.err.println("");
+            buf.writeTo(output);
+            buf.reset();
         }
-        
-        if (buflen > 0) {
-            // output real data
-            output.writeByte(buflen);
-            output.write(buf, 0, buflen);            
-        }
-        buflen = 0;
     }
     
     public void flush() throws IOException 
     { 
-    	if (buflen > 0) 
-    		writeBuf(); 
-		buflen = 0;		//gls100603a Fix from Torgeir Veimo
+		writeBuf(); 
     	output.flush(); 
     }
-    public void close() throws IOException { this.flush();  }
+    
+    public void close() throws IOException {
+        this.flush();
+        output.write((byte)EOF);
+        output.close();
+    }
+
 }
 

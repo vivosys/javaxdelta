@@ -21,16 +21,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- *
- * Change Log:
- * iiimmddyyn  nnnnn  Description
- * ----------  -----  -------------------------------------------------------
- * gls031504         made debug output conditional
  */
 
 package com.nothome.delta;
 
-import java.io.*;
+import gnu.trove.TLongIntHashMap;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Checksum {
     
@@ -39,9 +40,7 @@ public class Checksum {
     
     public static boolean debug = false;
     
-    protected int hashtable[];
-    protected long checksums[];
-    protected int prime;
+    protected TLongIntHashMap checksums = new TLongIntHashMap();
     
     public Checksum() { }
     
@@ -102,112 +101,38 @@ public class Checksum {
         return (high << 16) | (low & 0xffff);
     }
     
-    public static int generateHash(long checksum) {
-        long high = (checksum >> 16) & 0xffff;
-        long low = checksum & 0xffff;
-        long it = (high >> 2) + (low << 3) + (high << 16);
-        int hash = (int) (it ^ high ^ low);
-        return hash > 0 ? hash : -hash;
-    }
-    
     /**
      * Initialize checksums for source. The checksum for the S bytes at offset
      * S * i is inserted into an array at index i.
      *
      * This is not good enough, we also need a hashtable into these indexes.
-     *
      */
     public void generateChecksums(File sourceFile, int length) throws IOException {
         FileInputStream fis = new FileInputStream(sourceFile);
         try {
             generateChecksums(fis, length);
-        } catch (IOException e) {
-            throw e;
         } finally {
             fis.close();
         }
     }
     
     public void generateChecksums(InputStream sis, int length) throws IOException {
-        
         InputStream is = new BufferedInputStream(sis);
-        //int checksumcount = (int)sourceFile.length() / S;
         int checksumcount = (int) length / S;
-        if (debug)  //gls031504
-            System.out.println("generating checksum array of size " + checksumcount);
-        
-        checksums = new long[checksumcount];
-        hashtable = new int[checksumcount];
-        prime = findClosestPrime(checksumcount);
-        
-        if (debug)  //gls031504
-            System.out.println("using prime " + prime);
-        
-        // generate cheksums at each interval
         for (int i = 0; i < checksumcount; i++) {
-            
             byte buf[] = new byte[S];
-            
             is.read(buf, 0, S);
-            
-            checksums[i] = queryChecksum(buf, S);
+            checksums.put(queryChecksum(buf, S), i);
         }
-        
-        // generate hashtable entries for all checksums
-        for (int i = 0; i < checksumcount; i++) hashtable[i] = -1;
-        
-        for (int i = 0; i < checksumcount; i++) {
-            int hash = generateHash(checksums[i]) % prime;
-            if (debug)
-                System.out.println("checking with hash: " + hash);
-            if (hashtable[hash] != -1) {
-                if (debug)
-                    System.out.println("hash table collision for index " + i);
-            } else {
-                hashtable[hash] = i;
-            }
-        }
-        //System.out.println("checksums : " + printLongArray(checksums));
-        //System.out.println("hashtable : " + printIntArray(hashtable));
     }
     
-    public int findChecksumIndex(long checksum) {
-        return hashtable[generateHash(checksum) % prime];
-    }
-    
-    private static int findClosestPrime(int size) {
-        int prime = (int) SimplePrime.belowOrEqual(size - 1);
-        
-        return (prime < 2) ? 1 : prime;
-    }
-    
-    private String printIntArray(int[] a) {
-        String result = "";
-        result += "[";
-        for (int i = 0; i < a.length; i++) {
-            result += a[i];
-            if (i != (a.length - 1))
-                result += ",";
-            else
-                result += "]";
-        }
-        return result;
-    }
-    
-    private String printLongArray(long[] a) {
-        String result = "";
-        result += "[";
-        for (int i = 0; i < a.length; i++) {
-            result += a[i];
-            if (i != (a.length - 1))
-                result += ",";
-            else
-                result += "]";
-        }
-        return result;
-    }
-
     public static char[] getSingleHash() {
         return single_hash;
+    }
+
+    public int findChecksumIndex(long hashf) {
+        if (!checksums.contains(hashf))
+            return -1;
+        return checksums.get(hashf);
     }
 }

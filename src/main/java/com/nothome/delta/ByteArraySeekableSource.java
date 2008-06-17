@@ -27,41 +27,58 @@
 package com.nothome.delta;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
- *
+ * Wraps a byte buffer as a source
+ * 
  * @author Heiko Klein
  */
 public class ByteArraySeekableSource implements SeekableSource {
-    byte[] source;
-    long lastPos = 0;
+    
+    private ByteBuffer bb;
+    private ByteBuffer cur;
     
     /**
-     * Creates a new instance of ByteArraySeekableSource
+     * Constructs a new ByteArraySeekableSource.
      */
     public ByteArraySeekableSource(byte[] source) {
-        this.source = source;
+        if (source == null)
+            throw new NullPointerException("source");
+        this.bb = ByteBuffer.wrap(source);
     }
+    
+    /**
+     * Constructs a new ByteArraySeekableSource.
+     */
+    public ByteArraySeekableSource(ByteBuffer bb) {
+        if (bb == null)
+            throw new NullPointerException("bb");
+        this.bb = bb;
+    }
+    
     public void seek(long pos) throws IOException {
-        lastPos = pos;
+        bb.rewind();
+        cur = bb.slice();
+        if (pos > cur.limit())
+            throw new IllegalArgumentException("pos " + pos + " cannot seek " + cur.limit());
+        cur.position((int) pos);
     }
     
     public int read(byte[] b, int off, int len) throws IOException {
-        int maxLength = source.length - (int) lastPos;
-        if (maxLength <= 0) {
+        if (!bb.hasRemaining())
             return -1;
-        }
-        if (maxLength < len) {
-            len = maxLength;
-        }
-        System.arraycopy(source, (int) lastPos, b, off, len);
-        lastPos += len;
-        return len;
+        int read = Math.min(len, bb.remaining());
+        bb.get(b, off, read);
+        return read;
     }
+    
     public long length() throws IOException {
-        return source.length;
+        return bb.limit();
     }
+    
     public void close() throws IOException {
-        source = null;
+        bb = null;
+        cur = null;
     }
 }

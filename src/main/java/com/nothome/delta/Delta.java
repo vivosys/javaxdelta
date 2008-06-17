@@ -45,8 +45,18 @@ public class Delta {
     public Delta() {
     }
     
-    static public void computeDelta(SeekableSource source, InputStream targetIS, int targetLength, DiffWriter output)
-    throws IOException, DeltaException {
+    /**
+     * Compute a delta using hashing of segments.
+     * 
+     * @param source first file to compare with
+     * @param targetIS second file to compare with
+     * @param targetLength target file length
+     * @param output diff output
+     * 
+     * @throws IOException if diff generation fails
+     */
+    public static void computeDelta(SeekableSource source, InputStream targetIS, int targetLength, DiffWriter output)
+    throws IOException {
         
         int sourceLength = (int) source.length();
         
@@ -76,9 +86,7 @@ public class Delta {
             // simply return the complete target as diff
             int readBytes;
             while ((readBytes = target.read(buf)) >= 0) {
-                for (int i = 0; i < readBytes; i++) {
-                    output.addData(buf[i]);
-                }
+                output.addData(buf, 0, readBytes);
             }
             return;
         }
@@ -87,7 +95,7 @@ public class Delta {
         int bytesRead = target.read(buf, 0, S);
         int targetidx = bytesRead;
         
-        hashf = checksum.queryChecksum(buf, S);
+        hashf = Checksum.queryChecksum(buf, S);
         
         // The check for alternative hashf is only because I wanted to verify that the
         // update method really is correct. I will remove it shortly.
@@ -99,6 +107,8 @@ public class Delta {
         
         /*This flag indicates that we've run out of source bytes*/
         boolean sourceOutofBytes = false;
+        byte[] sourceBuff = new byte[buff_size];
+        byte[] targetBuff = new byte[buff_size];
         
         while (!done) {
             
@@ -125,14 +135,10 @@ public class Delta {
                 if (match & sourceOutofBytes == false) {
                     //System.out.println("before targetidx : " + targetidx );
                     // The length of the match is determined by comparing bytes.
-                    long start = System.currentTimeMillis();
                     
                     boolean ok = true;
-                    byte[] sourceBuff = new byte[buff_size];
-                    byte[] targetBuff = new byte[buff_size];
                     int source_idx = 0;
                     int target_idx = 0;
-                    int tCount = 0;
                     
                     do {
                         source_idx = source.read(sourceBuff, 0, buff_size);
@@ -187,15 +193,14 @@ public class Delta {
                         int remaining = targetLength - targetidx;
                         int readStatus=target.read(buf, 1, remaining);
                         targetidx += remaining;
-                        for (int ix = 0; ix < (remaining + 1); ix++)
-                            output.addData(buf[ix]);
+                        output.addData(buf, 0, remaining + 1);
                         done = true;
                     } else {
                         buf[0] = b[0];
                         target.read(buf, 1, S - 1);
                         targetidx += S - 1;
                         alternativehashf =
-                                hashf = checksum.queryChecksum(buf, S);
+                                hashf = Checksum.queryChecksum(buf, S);
                     }
                     continue; //continue loop
                 }
@@ -208,15 +213,15 @@ public class Delta {
                 targetidx += 1;
                 
                 // insert instruction with the old byte we no longer use...
-                output.addData(buf[0]);
+                output.addData(buf, 0, 1);
                 
                 alternativehashf =
-                        checksum.incrementChecksum(alternativehashf, buf[0], b[0]);
+                        Checksum.incrementChecksum(alternativehashf, buf[0], b[0]);
                 
                 for (int j = 0; j < 15; j++)
                     buf[j] = buf[j + 1];
                 buf[15] = b[0];
-                hashf = checksum.queryChecksum(buf, S);
+                hashf = Checksum.queryChecksum(buf, S);
                 
                 if (debug)
                     System.out.println(
@@ -226,22 +231,22 @@ public class Delta {
                             + Integer.toHexString((int) alternativehashf));
                 
             } else {
-                for (int ix = 0; ix < S; ix++)
-                    output.addData(buf[ix]);
+                output.addData(buf, 0, S);
                 done = true;
             }
             
         }
     }
     
-    static public void computeDelta(byte[] source, InputStream targetIS, int targetLength, DiffWriter output)
-    throws IOException, DeltaException {
+    public static void computeDelta(byte[] source, InputStream targetIS, int targetLength, DiffWriter output)
+    throws IOException {
         computeDelta(new ByteArraySeekableSource(source), targetIS, targetLength,output);
     }
-    static public void computeDelta(File sourceFile,
+    
+    public static void computeDelta(File sourceFile,
             File targetFile,
             DiffWriter output)
-            throws IOException, DeltaException                               //gls031504a
+            throws IOException
     {
         int targetLength = (int) targetFile.length();
         SeekableSource source = new RandomAccessFileSeekableSource(new RandomAccessFile(sourceFile, "r"));
@@ -249,8 +254,6 @@ public class Delta {
         try {
             computeDelta(source, targetIS, targetLength, output);
         } catch (IOException e) {
-            throw e;
-        } catch (DeltaException e) {
             throw e;
         } finally {
             output.flush();
@@ -300,7 +303,7 @@ public class Delta {
             
             //output.close();
             
-            delta.computeDelta(sourceFile, targetFile, output);
+            Delta.computeDelta(sourceFile, targetFile, output);
             
             output.flush();
             output.close();
