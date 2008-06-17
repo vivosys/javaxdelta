@@ -73,7 +73,6 @@ public class DeltaPatchTest {
     @After
     public void tearDown() throws Exception {
         (new File("delta")).delete();
-        (new File("patchedFile.txt")).delete();
     }
 
     @Test
@@ -130,7 +129,10 @@ public class DeltaPatchTest {
 
         assertEquals(patchedFile.length(), test2File.length());
         byte[] buf = new byte[(int) test2File.length()];
-        (new FileInputStream(patchedFile)).read(buf);
+        FileInputStream is = new FileInputStream(patchedFile);
+        is.read(buf);
+        is.close();
+        patchedFile.delete();
 
         assertEquals(new String(buf), read(test2File).toString());
     }
