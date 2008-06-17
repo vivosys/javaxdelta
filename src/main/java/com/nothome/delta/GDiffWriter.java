@@ -33,6 +33,7 @@ package com.nothome.delta;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 public class GDiffWriter implements DiffWriter {
     
@@ -64,6 +65,9 @@ public class GDiffWriter implements DiffWriter {
     
     private DataOutputStream output = null;
     
+    /**
+     * Constructs a new GDiffWriter.
+     */
     public GDiffWriter(DataOutputStream os) throws IOException {
         this.output = os;
         // write magic string "d1 ff d1 ff 04"
@@ -74,9 +78,20 @@ public class GDiffWriter implements DiffWriter {
         output.writeByte(0x04);
     }
     
+    /**
+     * Constructs a new GDiffWriter.
+     */
+    public GDiffWriter(OutputStream output) throws IOException {
+        this(new DataOutputStream(output));
+    }
+
     public void setDebug(boolean flag) { debug = flag; }
        
-    public void addCopy(int offset, int length) throws IOException {
+    public void addCopy(long offset, int length) throws IOException {
+        addCopy0((int)offset, length);
+    }
+    
+    private void addCopy0(int offset, int length) throws IOException {
         writeBuf();
         
         //output debug data        

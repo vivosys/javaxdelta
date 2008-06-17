@@ -25,25 +25,19 @@
 package com.nothome.delta;
 
 
-/**
- * This class implements a GDIFF output queue, that will contatenate
- * subsequent copy statements when necessary, and write both
- * copy statement and insert statement to the specified OutputStream.
- *
- * The output follows the GDIFF file specification available at
- * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
- */
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+/**
+ * For debugging patch generation.
+ */
 public class DebugDiffWriter implements DiffWriter {
     
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     
     public DebugDiffWriter() {}
     
-    public void addCopy(int offset, int length) throws IOException {
+    public void addCopy(long offset, int length) throws IOException {
         if (os.size() > 0)
             writeBuf();
         System.err.println("COPY off: " + offset + ", len: " + length);

@@ -211,7 +211,7 @@ public class GDiffPatcher {
                 System.err.println("aborting..");
                 return;
             }
-            GDiffPatcher patcher = new GDiffPatcher(sourceFile, patchFile, outputFile);
+            new GDiffPatcher(sourceFile, patchFile, outputFile);
 
             System.out.println("finished patching file");
 

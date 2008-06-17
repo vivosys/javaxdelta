@@ -233,8 +233,8 @@ public class Delta {
                         done = true;
                     } else {
                         buf[0] = b[0];
-                        target.read(buf, 1, S - 1);
-                        targetidx += S - 1;
+                        int count = target.read(buf, 1, S - 1);
+                        targetidx += count;
                     }
                     continue; //continue loop
                 }

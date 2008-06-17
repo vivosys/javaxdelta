@@ -81,9 +81,10 @@ public class JarDelta {
     			InputStream targetStream = target.getInputStream(targetEntry);
     			for(int erg=targetStream.read(targetBytes);erg<targetBytes.length;erg+=targetStream.read(targetBytes,erg,targetBytes.length-erg));
                 targetStream.close();
+                int chunk = Delta.DEFAULT_CHUNK_SIZE;
     			if(sourceEntry==null
-                        || sourceEntry.getSize() <= Checksum.S
-                        || targetEntry.getSize() <= Checksum.S) {  // new Entry od. alter Eintrag od. neuer Eintrag leer
+                        || sourceEntry.getSize() <= chunk
+                        || targetEntry.getSize() <= chunk) {  // new Entry od. alter Eintrag od. neuer Eintrag leer
     				ZipEntry outputEntry = new ZipEntry(targetEntry);
     				output.putNextEntry(outputEntry);
     				output.write(targetBytes);
@@ -96,7 +97,8 @@ public class JarDelta {
                     if(!equal(sourceBytes,targetBytes)) {
         				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                         DiffWriter diffWriter = new GDiffWriter(new DataOutputStream(outputStream));
-        				Delta.computeDelta(sourceBytes,target.getInputStream(targetEntry),targetSize,diffWriter);
+        				Delta d = new Delta();
+        				d.compute(sourceBytes,target.getInputStream(targetEntry),targetSize,diffWriter);
                         diffWriter.close();
 
         				ZipEntry outputEntry = new ZipEntry(targetEntry.getName()+".gdiff");

@@ -28,15 +28,12 @@ package com.nothome.delta;
 import gnu.trove.TLongIntHashMap;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class Checksum {
     
     public static final int BASE = 65521;
-    public static final int S = (1 << 4); // 16
     
     public static boolean debug = false;
     
@@ -44,7 +41,7 @@ public class Checksum {
     
     public Checksum() { }
     
-    protected static final char single_hash[] = {
+    private static final char single_hash[] = {
         /* Random numbers generated using SLIB's pseudo-random number generator. */
         0xbcd1, 0xbb65, 0x42c2, 0xdffe, 0x9666, 0x431b, 0x8504, 0xeb46,
         0x6379, 0xd460, 0xcf14, 0x53cf, 0xdb51, 0xdb08, 0x12c8, 0xf602,
@@ -93,36 +90,27 @@ public class Checksum {
         return ((high & 0xffff) << 16) | (low & 0xffff);
     }
     
-    public static long incrementChecksum(long checksum, byte out, byte in) {
+    public static long incrementChecksum(long checksum, byte out, byte in, int chunkSize) {
         char old_c = single_hash[out+128];
         char new_c = single_hash[in+128];
         int low   = ((int)((checksum) & 0xffff) - old_c + new_c) & 0xffff;
-        int high  = ((int)((checksum) >> 16) - (old_c * S) + low) & 0xffff;
+        int high  = ((int)((checksum) >> 16) - (old_c * chunkSize) + low) & 0xffff;
         return (high << 16) | (low & 0xffff);
     }
     
     /**
-     * Initialize checksums for source. The checksum for the S bytes at offset
-     * S * i is inserted into an array at index i.
-     *
-     * This is not good enough, we also need a hashtable into these indexes.
+     * Initialize checksums for source. The checksum for the <code>chunkSize</code> bytes at offset
+     * <code>chunkSize</code> * i is inserted into an array at index i.
      */
-    public void generateChecksums(File sourceFile, int length) throws IOException {
-        FileInputStream fis = new FileInputStream(sourceFile);
-        try {
-            generateChecksums(fis, length);
-        } finally {
-            fis.close();
-        }
-    }
-    
-    public void generateChecksums(InputStream sis, int length) throws IOException {
+    public void generateChecksums(InputStream sis, int chunkSize) throws IOException {
         InputStream is = new BufferedInputStream(sis);
-        int checksumcount = (int) length / S;
-        for (int i = 0; i < checksumcount; i++) {
-            byte buf[] = new byte[S];
-            is.read(buf, 0, S);
-            checksums.put(queryChecksum(buf, S), i);
+        byte buf[] = new byte[chunkSize];
+        int count = 0;
+        while (true) {
+            int read = is.read(buf, 0, chunkSize);
+            if (read < chunkSize)
+                break;
+            checksums.put(queryChecksum(buf, chunkSize), count++);
         }
     }
     

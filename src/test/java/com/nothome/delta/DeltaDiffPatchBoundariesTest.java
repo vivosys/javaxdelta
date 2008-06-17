@@ -93,7 +93,8 @@ public class DeltaDiffPatchBoundariesTest {
 
 		try {
 			DiffWriter output = new GDiffWriter( new DataOutputStream( new BufferedOutputStream( new FileOutputStream( deltaFile ) ) ) );
-			Delta.computeDelta( test1File, test2File, output );
+			Delta d = new Delta();
+			d.compute( test1File, test2File, output );
 			output.close();
 
 			assertTrue( deltaFile.exists() );

@@ -117,10 +117,12 @@ public class DeltaPatchTest {
         File delta = new File("delta");
         DiffWriter output = new GDiffWriter(new DataOutputStream(
                 new BufferedOutputStream(new FileOutputStream(delta))));
-        Delta.computeDelta(test1File, test2File, output);
+        Delta d = new Delta();
+        d.compute(test1File, test2File, output);
         output.close();
 
         assertTrue(delta.exists());
+        
         // System.out.println(read(delta).toString());
 
         new GDiffPatcher(test1File, delta, patchedFile);

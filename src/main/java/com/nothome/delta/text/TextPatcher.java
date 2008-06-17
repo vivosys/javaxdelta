@@ -25,6 +25,7 @@
 package com.nothome.delta.text;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -93,6 +94,8 @@ public class TextPatcher {
         else
             br = new BufferedReader(patch);
         String header = br.readLine();
+        if (header == null)
+            throw new EOFException();
         if (!header.equals(GDiffTextWriter.GDT)) {
             throw new IOException("Unexpected header: " + header);
         }
