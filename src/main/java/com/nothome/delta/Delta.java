@@ -141,7 +141,7 @@ public class Delta {
             System.out.println("using match length S = " + S);
         }
         
-        checksum.generateChecksums(new SeekableSourceInputStream(source), S);
+        checksum.generateChecksums(source, S);
         source.seek(0);
         
         int buff_size = 64 * S;

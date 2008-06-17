@@ -33,7 +33,7 @@ import java.io.IOException;
  */
 public class DebugDiffWriter implements DiffWriter {
     
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    private ByteArrayOutputStream os = new ByteArrayOutputStream();
     
     public DebugDiffWriter() {}
     

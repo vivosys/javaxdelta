@@ -102,12 +102,11 @@ public class Checksum {
      * Initialize checksums for source. The checksum for the <code>chunkSize</code> bytes at offset
      * <code>chunkSize</code> * i is inserted into an array at index i.
      */
-    public void generateChecksums(InputStream sis, int chunkSize) throws IOException {
-        InputStream is = new BufferedInputStream(sis);
+    public void generateChecksums(SeekableSource source, int chunkSize) throws IOException {
         byte buf[] = new byte[chunkSize];
         int count = 0;
         while (true) {
-            int read = is.read(buf, 0, chunkSize);
+            int read = source.read(buf, 0, chunkSize);
             if (read < chunkSize)
                 break;
             checksums.put(queryChecksum(buf, chunkSize), count++);

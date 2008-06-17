@@ -25,16 +25,16 @@
 package com.nothome.delta;
 
 
-/**
- * The output follows the GDIFF file specification available at
- * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
- */
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ * Outputs a diff following the GDIFF file specification available at
+ * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
+ */
 public class GDiffWriter implements DiffWriter {
     
     /**
@@ -61,7 +61,7 @@ public class GDiffWriter implements DiffWriter {
 
     private ByteArrayOutputStream buf = new ByteArrayOutputStream();
 
-    protected boolean debug = false;
+    private boolean debug = false;
     
     private DataOutputStream output = null;
     

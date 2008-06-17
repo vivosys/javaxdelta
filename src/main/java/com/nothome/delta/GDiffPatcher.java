@@ -21,20 +21,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  *
- * Change Log:
- * iiimmddyyn  nnnnn  Description
- * ----------  -----  -------------------------------------------------------
- * gls031504a         Error being written to stderr rather than throwing exception
  */
 
 package com.nothome.delta;
-
-/**
- * This class patches an input file with a GDIFF patch fil�e.
- *
- * The patch file should follow the GDIFF file specification available at
- * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
- */
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -49,8 +38,21 @@ import java.io.RandomAccessFile;
 
 import static com.nothome.delta.GDiffWriter.*;
 
+/**
+ * This class patches an input file with a GDIFF patch fil�e.
+ *
+ * The patch file should follow the GDIFF file specification available at
+ * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
+ */
 public class GDiffPatcher {
 
+    /**
+     * Constructs a new GDiffPatcher.
+     * @param sourceFile
+     * @param patchFile
+     * @param outputFile
+     * @throws IOException
+     */
     public GDiffPatcher(File sourceFile, File patchFile, File outputFile)
 		throws IOException
 	{
@@ -67,10 +69,27 @@ public class GDiffPatcher {
             output.close();
         }
     }
+    
+    /**
+     * Constructs a new GDiffPatcher.
+     * @param source
+     * @param patch
+     * @param output
+     * @throws IOException
+     * @throws PatchException
+     */
     public GDiffPatcher(byte[] source, InputStream patch, OutputStream output) throws IOException, PatchException{
         this(new ByteArraySeekableSource(source), patch, output);
     }
     
+    /**
+     * Constructs a new GDiffPatcher.
+     * @param source
+     * @param patch
+     * @param out
+     * @throws IOException
+     * @throws PatchException
+     */
     public GDiffPatcher(SeekableSource source, InputStream patch, OutputStream out) throws IOException, PatchException {
         runPatch(source, patch, out);
     }
@@ -87,8 +106,7 @@ public class GDiffPatcher {
                 patchIS.readUnsignedByte() != 0xff ||
                 patchIS.readUnsignedByte() != 0x04) {
 
-            System.err.println("magic string not found, aborting!");
-            return;
+            throw new PatchException("magic string not found, aborting!");
         }
 
         while (true) {
@@ -155,26 +173,17 @@ public class GDiffPatcher {
     }
 
     private void copy(long offset, int length, SeekableSource source, OutputStream output)
-		throws IOException, PatchException                               //gls031504a
+		throws IOException
 	{
         if (offset+length > source.length())
 		{
-			throw new PatchException("truncated source file, aborting"); //gls031504a
+			throw new PatchException("truncated source file, aborting");
         }
         byte buf[] = new byte[256];
         source.seek(offset);
         while (length > 0) {
             int len = length > 256 ? 256 : length;
             int res = source.read(buf, 0, len);
-	    /*
-            System.out.print("copy: " + offset + ", " + length + ":");
-            for (int sx = 0; sx < len; sx++)
-                if (buf[sx] == '\n')
-                    System.err.print("\\n");
-                else
-                    System.out.print(String.valueOf((char)((char) buf[sx])));
-            System.out.println("");
-	    */
             output.write(buf, 0, res);
             length -= res;
         }
@@ -192,7 +201,9 @@ public class GDiffPatcher {
         }
     }
 
-    // sample program to compute the difference between two input files.
+    /**
+     * Simple command line tool to patch a file.
+     */
     public static void main(String argv[]) {
 
         if (argv.length != 3) {
