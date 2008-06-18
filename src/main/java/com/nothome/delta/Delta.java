@@ -44,8 +44,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PushbackInputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 
 /**
  * Class for computing deltas against a source.
@@ -61,7 +63,10 @@ public class Delta {
     
     /**
      * Default size of 16.
-     * Use a size like 4 for fairly small files, 64 or 128 for large files.
+     * For "Lorem ipsum" files, the ideal size is about 14. Any smaller and
+     * the patch size becomes actually be larger.
+     * <p>
+     * Use a size like 64 or 128 for large files.
      */
     public static final int DEFAULT_CHUNK_SIZE = 1<<4;
     
@@ -92,7 +97,7 @@ public class Delta {
      */
     public void compute(byte source[], byte target[], OutputStream output)
     throws IOException {
-        compute(new ByteArraySeekableSource(target), 
+        compute(new ByteBufferSeekableSource(target), 
                 new ByteArrayInputStream(target), target.length,
                 new GDiffWriter(output));
     }
@@ -102,7 +107,7 @@ public class Delta {
      */
     public void compute(byte[] sourceBytes, InputStream inputStream,
             int targetSize, DiffWriter diffWriter) throws IOException {
-        compute(new ByteArraySeekableSource(sourceBytes), 
+        compute(new ByteBufferSeekableSource(sourceBytes), 
                 inputStream, targetSize, diffWriter);
     }
     
@@ -133,169 +138,220 @@ public class Delta {
      * 
      * @throws IOException if diff generation fails
      */
-    public void compute(SeekableSource source, InputStream targetIS, int targetLength, DiffWriter output)
+    public void compute(SeekableSource seekSource, InputStream targetIS, int targetLength, DiffWriter output)
     throws IOException {
-        Checksum checksum = new Checksum();
         
         if (debug) {
-            System.out.println("using match length S = " + S);
+            debug("using match length S = " + S);
         }
         
-        checksum.generateChecksums(source, S);
-        source.seek(0);
-        
-        int buff_size = 64 * S;
-        PushbackInputStream target =
-                new PushbackInputStream(
-                new BufferedInputStream(targetIS),
-                buff_size);
-        
-        boolean done = false;
-        byte buf[] = new byte[S];
-        long hashf = 0;
-        byte b[] = new byte[1];
-        byte sourcebyte[] = new byte[S];
-        
-        if (targetLength <= S || source.length() <= S) {
-            // simply return the complete target as diff
+        /*
+        if (targetLength <= S || seekSource.length() <= S) {
             int readBytes;
-            while ((readBytes = target.read(buf)) >= 0) {
-                output.addData(buf, 0, readBytes);
+            while ((readBytes = targetIS.read()) >= 0) {
+                output.addData((byte)readBytes);
             }
             return;
         }
+        */
         
-        // initialize first complete checksum.
-        int bytesRead = target.read(buf, 0, S);
-        int targetidx = bytesRead;
-        
-        hashf = Checksum.queryChecksum(buf, S);
-        
+        SourceState source = new SourceState(seekSource);
+        TargetState target = new TargetState(targetIS);
         if (debug)
-            System.out.println("my hashf: " + hashf);
+            debug("checksums " + source.checksum);
         
-        /*This flag indicates that we've run out of source bytes*/
-        boolean sourceOutofBytes = false;
-        byte[] sourceBuff = new byte[buff_size];
-        byte[] targetBuff = new byte[buff_size];
-        
-        while (!done) {
-            
-            int index = checksum.findChecksumIndex(hashf);
+        while (!target.eof()) {
+            debug("!target.eof()");
+            int index = target.find(source);
             if (index != -1) {
-                
-                boolean match = true;
+                if (debug)
+                    debug("found hash " + index);
                 int offset = index * S;
-                int length = S - 1;
                 source.seek(offset);
-                
-                //				possible match, need to check byte for byte
-                if (sourceOutofBytes == false
-                        && source.read(sourcebyte, 0, S) != -1) {
-                    for (int ix = 0; ix < S; ix++) {
-                        if (sourcebyte[ix] != buf[ix]) {
-                            match = false;
-                        }
-                    }
-                } else {
-                    sourceOutofBytes = true;
-                }
-                
-                if (match & sourceOutofBytes == false) {
-                    //System.out.println("before targetidx : " + targetidx );
-                    // The length of the match is determined by comparing bytes.
-                    
-                    boolean ok = true;
-                    int source_idx = 0;
-                    int target_idx = 0;
-                    
-                    do {
-                        source_idx = source.read(sourceBuff, 0, buff_size);
-                        //System.out.print("Source: "+ source_idx);
-                        if (source_idx == -1) {
-                            /*Ran our of source bytes during match, so flag this*/
-                            sourceOutofBytes = true;
-                            //System.out.println("Source out ... target has: " + target.available());
-                            break;
-                        }
-                        
-                        /*Don't read more target bytes then source bytes ... this is *VERY* important*/
-                        target_idx = target.read(targetBuff, 0, source_idx);
-                        //System.out.println(" Target: "+target_idx);
-                        if (target_idx == -1) {
-                            /*Ran out of target bytes during this match, so we're done*/
-                            //System.err.println("Ran outta bytes Sourceidx="+source_idx +" targetidx:"+target_idx );
-                            break;
-                        }
-                        
-                        int read_idx = Math.min(source_idx, target_idx);
-                        int i = 0;
-                        do {
-                            targetidx++;
-                            ++length;
-                            ok = sourceBuff[i] == targetBuff[i];
-                            i++;
-                            if (!ok) {
-                                b[0] = targetBuff[i - 1];
-                                
-                                if (target_idx != -1) {
-                                    target.unread(
-                                            targetBuff,
-                                            i,
-                                            target_idx - i);
-                                }
-                            }
-                        } while (i < read_idx && ok);
-                        b[0] = targetBuff[i-1]; //gls100603a (fix from Dan Morrione)
-                    }
-                    while(ok && targetLength-targetidx > 0);
-                    
-                    // this is a insert instruction
-                    //System.out.println("output.addCopy("+offset+","+length+")");
-                    output.addCopy(offset, length);
-                    
-                    if (targetLength - targetidx <= S-1) {
-                        // eof reached, special case for last bytes
-                        if (debug)
-                            System.out.println("last part of file");
-                        buf[0] = b[0]; // don't lose this byte
-                        int remaining = targetLength - targetidx;
-                        int readStatus=target.read(buf, 1, remaining);
-                        targetidx += remaining;
-                        output.addData(buf, 0, remaining + 1);
-                        done = true;
-                    } else {
-                        buf[0] = b[0];
-                        int count = target.read(buf, 1, S - 1);
-                        targetidx += count;
-                        hashf = Checksum.queryChecksum(buf, S);
-                    }
-                    continue; //continue loop
-                }
-            }
-            
-            if (targetLength - targetidx > 0) {
-                // update the adler fingerpring with a single byte
-                
-                target.read(b, 0, 1);
-                targetidx += 1;
-                
-                // insert instruction with the old byte we no longer use...
-                output.addData(buf, 0, 1);
-                
-                hashf = Checksum.incrementChecksum(hashf, buf[0], b[0], S);
-                
-                int S1 = S - 1;
-                for (int j = 0; j < S1; j++)
-                    buf[j] = buf[j + 1];
-                buf[S1] = b[0];
-                
+                int match = target.longestMatch(source);
+                if (debug)
+                    debug("output.addCopy("+offset+","+match+")");
+                output.addCopy(offset, match);
             } else {
-                output.addData(buf, 0, S);
-                done = true;
+                int i = target.read();
+                if (debug)
+                    debug("addData " + (char)i);
+                if (i == -1)
+                    break;
+                output.addData((byte)i);
             }
-            
         }
+        output.flush();
+    }
+    
+    class SourceState {
+
+        private Checksum checksum;
+        private SeekableSource source;
+        
+        public SourceState(SeekableSource source) throws IOException {
+            checksum = new Checksum(source, S);
+            this.source = source;
+            source.seek(0);
+        }
+
+        public void seek(long index) throws IOException {
+            source.seek(index);
+        }
+
+        /**
+         * Returns a debug <code>String</code>.
+         */
+        @Override
+        public String toString()
+        {
+            return "Source"+
+                " checksum=" + this.checksum +
+                " source=" + this.source +
+                "";
+        }
+        
+    }
+        
+    class TargetState {
+        
+        private ReadableByteChannel c;
+        private ByteBuffer tbuf = ByteBuffer.allocate(blocksize());
+        private ByteBuffer sbuf = ByteBuffer.allocate(blocksize());
+        private long hash;
+        private boolean hashReset = true;
+        private boolean eof;
+        
+        TargetState(InputStream targetIS) throws IOException {
+            c = Channels.newChannel(targetIS);
+            tbuf.limit(0);
+        }
+        
+        private int blocksize() {
+            return Math.min(1024, S * 4);
+        }
+
+        /**
+         * Returns the index of the next N bytes of the stream.
+         */
+        public int find(SourceState source) throws IOException {
+            if (eof)
+                return -1;
+            sbuf.clear();
+            sbuf.limit(0);
+            if (hashReset) {
+                debug("hashReset");
+                while (tbuf.remaining() < S) {
+                    tbuf.compact();
+                    int read = c.read(tbuf);
+                    tbuf.flip();
+                    if (read == -1) {
+                        debug("target ending");
+                        return -1;
+                    }
+                }
+                hash = Checksum.queryChecksum(tbuf, S);
+                hashReset = false;
+            }
+            if (debug)
+                debug("hash " + hash + " " + dump());
+            return source.checksum.findChecksumIndex(hash);
+        }
+
+        public boolean eof() {
+            return eof;
+        }
+
+        /**
+         * Reads a byte.
+         * @throws IOException
+         */
+        public int read() throws IOException {
+            if (tbuf.remaining() <= S) {
+                readMore();
+            }
+            if (!tbuf.hasRemaining()) {
+                eof = true;
+                return -1;
+            }
+            byte b = tbuf.get();
+            if (tbuf.remaining() >= S) {
+                byte nchar = tbuf.get( tbuf.position() + S -1 );
+                hash = Checksum.incrementChecksum(hash, b, nchar, S);
+            } else {
+                debug("out of char");
+            }
+            return b;
+        }
+
+        /**
+         * Returns the longest match length at the source location.
+         */
+        public int longestMatch(SourceState source) throws IOException {
+            debug("longestMatch");
+            int match = 0;
+            hashReset = true;
+            while (true) {
+                if (!sbuf.hasRemaining()) {
+                    sbuf.clear();
+                    int read = source.source.read(sbuf);
+                    sbuf.flip();
+                    if (read == -1)
+                        return match;
+                }
+                if (!tbuf.hasRemaining()) {
+                    readMore();
+                    if (!tbuf.hasRemaining()) {
+                        debug("target ending");
+                        eof = true;
+                        return match;
+                    }
+                }
+                if (sbuf.get() != tbuf.get()) {
+                    tbuf.position(tbuf.position() - 1);
+                    return match;
+                }
+                match++;
+            }
+        }
+
+        private void readMore() throws IOException {
+            if (debug)
+                debug("readMore " + tbuf);
+            tbuf.compact();
+            c.read(tbuf);
+            tbuf.flip();
+        }
+
+        void hash() {
+            hash = Checksum.queryChecksum(tbuf, S);
+        }
+
+        /**
+         * Returns a debug <code>String</code>.
+         */
+        @Override
+        public String toString()
+        {
+            return "Target[" +
+                " targetBuff=" + dump() + // this.tbuf +
+                " sourceBuff=" + this.sbuf +
+                " hashf=" + this.hash +
+                " eof=" + this.eof +
+                "]";
+        }
+        
+        private String dump() { return dump(tbuf); }
+        
+        private String dump(ByteBuffer bb) {
+            bb.mark();
+            StringBuilder sb = new StringBuilder();
+            while (bb.hasRemaining())
+                sb.append((char)bb.get());
+            bb.reset();
+            return sb.toString();
+        }
+        
     }
     
     /**
@@ -304,8 +360,7 @@ public class Delta {
     public static void main(String argv[]) throws Exception {
         if (argv.length != 3) {
             System.err.println("usage Delta [-d] source target [output]");
-            System.err.println(
-                    "either -d or an output filename must be specified.");
+            System.err.println("either -d or an output filename must be specified.");
             System.err.println("aborting..");
             return;
         }
@@ -342,6 +397,11 @@ public class Delta {
         output.close();
         if (debug) //gls031504a
             System.out.println("finished generating delta");
+    }
+    
+    private void debug(String s) {
+        if (debug)
+            System.err.println(s);
     }
 
 }

@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.CharBuffer;
 
 import org.junit.Test;
 
@@ -19,11 +20,10 @@ public class ChecksumTest {
     
     @Test
     public void testVer() throws IOException {
-        Checksum cs = new Checksum(DeltaTest.forFile("/ver1.txt"));
-        assertEquals(119, cs.getLength());
-        assertEquals(119, cs.getLength());
-        String s = "xxx yyy zzz\r\nxxx yyy zzz\r\nxxx yyy zzz".substring(0, Checksum.S);
-        long queryChecksum = Checksum.queryChecksum(s);
+        int d = Delta.DEFAULT_CHUNK_SIZE;
+        Checksum cs = new Checksum(DeltaTest.forFile("/ver1.txt"), d);
+        String s = "xxx yyy zzz\r\nxxx yyy zzz\r\nxxx yyy zzz".substring(0, d);
+        long queryChecksum = Checksum.queryChecksum(CharBuffer.wrap(s), d);
         System.out.println(cs);
         System.out.println(queryChecksum);
         Integer i = cs.findChecksumIndex(queryChecksum);

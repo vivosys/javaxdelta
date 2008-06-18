@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 
 import static com.nothome.delta.GDiffWriter.*;
 
@@ -45,6 +46,9 @@ import static com.nothome.delta.GDiffWriter.*;
  * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
  */
 public class GDiffPatcher {
+    
+    private ByteBuffer buf = ByteBuffer.allocate(1024);
+    private byte buf2[] = buf.array();
 
     /**
      * Constructs a new GDiffPatcher.
@@ -79,7 +83,7 @@ public class GDiffPatcher {
      * @throws PatchException
      */
     public GDiffPatcher(byte[] source, InputStream patch, OutputStream output) throws IOException, PatchException{
-        this(new ByteArraySeekableSource(source), patch, output);
+        this(new ByteBufferSeekableSource(source), patch, output);
     }
     
     /**
@@ -175,28 +179,23 @@ public class GDiffPatcher {
     private void copy(long offset, int length, SeekableSource source, OutputStream output)
 		throws IOException
 	{
-        if (offset+length > source.length())
-		{
-			throw new PatchException("truncated source file, aborting");
-        }
-        byte buf[] = new byte[256];
         source.seek(offset);
         while (length > 0) {
-            int len = length > 256 ? 256 : length;
-            int res = source.read(buf, 0, len);
-            output.write(buf, 0, res);
+            int len = Math.min(buf.capacity(), length);
+            buf.clear().limit(len);
+            int res = source.read(buf);
+            output.write(buf.array(), 0, res);
             length -= res;
         }
     }
 
     private void append(int length, InputStream patch, OutputStream output) throws IOException {
-        byte buf[] = new byte[256];
         while (length > 0) {
-            int len = Math.min(buf.length, length);
-    	    int res = patch.read(buf, 0, len);
+            int len = Math.min(buf2.length, length);
+    	    int res = patch.read(buf2, 0, len);
     	    if (res == -1)
     	        throw new EOFException("cannot read " + length);
-            output.write(buf, 0, res);
+            output.write(buf2, 0, res);
             length -= res;
         }
     }

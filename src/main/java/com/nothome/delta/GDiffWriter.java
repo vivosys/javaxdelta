@@ -133,8 +133,9 @@ public class GDiffWriter implements DiffWriter {
         }
     }
     
-    public void addData(byte[] b, int offset, int length) throws IOException {
-        buf.write(b, offset, length);
+    public void addData(byte b) throws IOException {
+        if (b == 0) throw new IOException("zero");
+        buf.write(b);
         if (buf.size() >= CHUNK_SIZE)
             writeBuf();
     }

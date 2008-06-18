@@ -27,6 +27,7 @@
 package com.nothome.delta;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * This is a wrapper interface which presents the functions use in
@@ -37,9 +38,8 @@ import java.io.IOException;
 public interface SeekableSource {
     
     public void seek(long pos) throws IOException ;
-    public int read(byte[] b, int off, int len) throws IOException ;
     public void close() throws IOException;
-    public long length() throws IOException ;
+    public int read(ByteBuffer bb) throws IOException;
     
     
     

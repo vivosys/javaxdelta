@@ -114,8 +114,8 @@ public class GDiffTextWriter implements DiffTextWriter {
         w.write(LF);
     }
 
-    public void addData(CharSequence seq) throws IOException {
-        caw.append(seq);
+    public void addData(char c) throws IOException {
+        caw.append(c);
         if (caw.size() > CHUNK_SIZE)
             flush();
     }

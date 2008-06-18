@@ -40,11 +40,10 @@ public interface DiffTextWriter {
     void addCopy(int offset, int length) throws IOException;
     
     /**
-     * Add a portion of an array of characters to output.
-     * @param seq data to add
+     * Add a character to output.
      * @throws IOException
      */
-	void addData(CharSequence seq) throws IOException;
+	void addData(char seq) throws IOException;
 	
 	/**
 	 * Writes current state to output stream.

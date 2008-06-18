@@ -29,6 +29,8 @@ package com.nothome.delta;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 
 /**
  * 
@@ -58,6 +60,14 @@ public class RandomAccessFileSeekableSource implements SeekableSource {
 
     public void close() throws IOException {
         raf.close();
+    }
+
+    public int read(ByteBuffer bb) throws IOException {
+        int c = raf.read(bb.array(), bb.position(), bb.remaining());
+        if (c == -1)
+            return -1;
+        bb.position(bb.position() + c);
+        return c;
     }
     
 }

@@ -16,10 +16,12 @@ public class TextPatcherTest {
         StringWriter sw = new StringWriter();
         GDiffTextWriter w = new GDiffTextWriter(sw);
         w.addCopy(2, 2);
-        w.addData("xyz");
-        w.addData("z");
+        w.addData('x');
+        w.addData('y');
+        w.addData('z');
+        w.addData('z');
         w.addCopy(6, 1);
-        w.addData("!");
+        w.addData('!');
         w.flush();
         TextPatcher patcher = new TextPatcher(s);
         String patch = patcher.patch(sw.toString());

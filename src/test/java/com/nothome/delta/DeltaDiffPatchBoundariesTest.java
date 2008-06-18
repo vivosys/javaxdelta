@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,36 +49,53 @@ public class DeltaDiffPatchBoundariesTest {
 
     @Test
 	public void testCase1() throws Exception {
-		assertTrue( run( "0123456789abcdef", "0123456789abcdef" ) );
+		run( "0123456789abcdef", "0123456789abcdef" );
 	}
 
     @Test
 	public void testCase2() throws Exception {
-		assertTrue( run( "0123456789abcdef", "0123456789abcdef+" ) );
+		run( "0123456789abcdef", "0123456789abcdef+" );
 	}
 
     @Test
 	public void testCase3() throws Exception {
-		assertTrue( run( "0123456789abcdef0", "0123456789abcdef0+" ) );
+		run( "0123456789abcdef0", "0123456789abcdef0+" );
 	}
 
     @Test
 	public void testCase4() throws Exception {
-		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef0123456789abcdef+" ) );
+		run(
+		        "0123456789abcdef0123456789abcdef",
+		        "0123456789abcdef0123456789abcdef+" );
+	}
+
+    @Test
+	public void testCase4b() throws Exception {
+        String a = "aaaaaaaaaaaaaaaa" ;
+        String x = "xxxxxxxxxxxxxxxx" ;
+		run(a + x, x + a );
 	}
 
     @Test
     public void testCase5() throws Exception {
-		assertTrue( run( "0123456789abcdef0123456789abcdef", "0123456789abcdef" ) );
+		run( "0123456789abcdef0123456789abcdef", "0123456789abcdef" );
 	}
 
     @Test
     public void testCase6() throws Exception {
-		assertTrue( run( "Seite reserviert. Hier soll demnächst etwas über mich stehen.", "Seite reserviert. Hier soll demnächst etwas über mich stehen. (Test der Umlaute)" ) );
+		run( "Seite reserviert. Hier soll demnächst etwas über mich stehen.",
+		     "Seite reserviert. Hier soll demnächst etwas über mich stehen. (Test der Umlaute)" );
+		 ///                                                                 0123456789123456789
+	}
+
+    @Test
+	public void testShort() throws Exception {
+		run( "0123456789abcdef", "0123456789" );
+		run( "0123456789", "0123456789abcdef" );
 	}
 
         
-        private boolean run( String string1, String string2 ) throws Exception {
+    private void run( String string1, String string2 ) throws Exception {
 		File test1File = new File( "test1.txt" );
 		File test2File = new File( "test2.txt" );
 
@@ -99,10 +117,12 @@ public class DeltaDiffPatchBoundariesTest {
 
 			assertTrue( deltaFile.exists() );
 
+            System.out.println(fmt(DeltaPatchTest.read(deltaFile)));
+
 			new GDiffPatcher( test1File, deltaFile, patchedFile );
 			assertTrue( patchedFile.exists() );
 
-			assertEquals( patchedFile.length(), (long)string2.getBytes().length );
+			assertEquals( (long)string2.getBytes().length, patchedFile.length() );
 			byte[] buf = new byte[string2.getBytes().length];
 			new FileInputStream( patchedFile ).read( buf );
 
@@ -114,7 +134,17 @@ public class DeltaDiffPatchBoundariesTest {
                     deltaFile.delete();
                     patchedFile.delete();
                 }
-		return true;
 	}
+
+    private String fmt(ByteArrayOutputStream read) {
+        byte[] b = read.toByteArray();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < b.length; i++){
+            int b1 = b[i] & 0xFF;
+            if (b1 < 32 || b1 > 127) sb.append("|" + b1 + "|");
+            else sb.append((char)b1);
+        }
+        return sb.toString();
+    }
 
 }

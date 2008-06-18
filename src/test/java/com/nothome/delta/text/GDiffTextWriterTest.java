@@ -15,7 +15,8 @@ public class GDiffTextWriterTest {
         GDiffTextWriter tw = new GDiffTextWriter(sw);
         tw.addCopy(0x1f4, 0xa0);
         String s = "abcdefg";
-        tw.addData(s);
+        for (int i = 0; i < s.length(); i++)
+            tw.addData(s.charAt(i));
         tw.close();
         assertEquals(
                 GDiffTextWriter.GDT + "\n" +

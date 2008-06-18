@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 
 import org.junit.Test;
 
@@ -37,8 +38,8 @@ public class DeltaTest {
     public void test(String v1, String v2) throws IOException {
         CharSequence string = Delta.toString(forFile(v1));
         CharSequence string2 = Delta.toString(forFile(v2));
-        Delta d = new Delta(string, string2);
-        String delta = d.getDelta();
+        Delta d = new Delta();
+        String delta = d.compute(string, string2);
         System.err.println(delta);
         System.err.println("----");
         String string3 = new TextPatcher(string).patch(delta);

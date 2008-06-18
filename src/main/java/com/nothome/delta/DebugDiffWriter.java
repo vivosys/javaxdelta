@@ -43,8 +43,8 @@ public class DebugDiffWriter implements DiffWriter {
         System.err.println("COPY off: " + offset + ", len: " + length);
     }
     
-    public void addData(byte[] b, int offset, int length) throws IOException {
-        os.write(b, offset, length);
+    public void addData(byte b) throws IOException {
+        os.write(b);
         writeBuf();
     }
     private void writeBuf() {

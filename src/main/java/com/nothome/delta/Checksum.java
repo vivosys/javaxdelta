@@ -26,20 +26,16 @@
 package com.nothome.delta;
 
 import gnu.trove.TLongIntHashMap;
+import gnu.trove.decorator.TLongIntHashMapDecorator;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public class Checksum {
-    
-    public static final int BASE = 65521;
     
     public static boolean debug = false;
     
     protected TLongIntHashMap checksums = new TLongIntHashMap();
-    
-    public Checksum() { }
     
     private static final char single_hash[] = {
         /* Random numbers generated using SLIB's pseudo-random number generator. */
@@ -77,14 +73,43 @@ public class Checksum {
         0x1672, 0xec28, 0x6acb, 0x86cc, 0x186e, 0x9414, 0xd674, 0xd1a5
     };
     
+    /**
+     * Initialize checksums for source. The checksum for the <code>chunkSize</code> bytes at offset
+     * <code>chunkSize</code> * i is inserted into an array at index i.
+     */
+    public Checksum(SeekableSource source, int chunkSize) throws IOException {
+        ByteBuffer bb = ByteBuffer.allocate(chunkSize * 2);
+        int count = 0;
+        while (true) {
+            int read = source.read(bb);
+            // System.out.println("READ " + read);
+            bb.flip();
+            // System.out.println("got " + bb);
+            if (bb.remaining() < chunkSize)
+                break;
+            while (bb.remaining() >= chunkSize) {
+                long queryChecksum = queryChecksum0(bb, chunkSize);
+                checksums.put(queryChecksum, count++);
+            }
+            bb.compact();
+        }
+        System.out.println("break " + bb);
+    }
     
     /**
-     * assumes the buffer is of length S
+     * Marks, gets, then resets the checksum computed from the buffer.
      */
-    public static long queryChecksum(byte buf[], int len) {
+    public static long queryChecksum(ByteBuffer bb, int len) {
+        bb.mark();
+        long sum = queryChecksum0(bb, len);
+        bb.reset();
+        return sum;
+    }
+    
+    private static long queryChecksum0(ByteBuffer bb, int len) {
         int high = 0; int low = 0;
         for (int i = 0; i < len; i++) {
-            low += single_hash[buf[i]+128];
+            low += single_hash[bb.get()+128];
             high += low;
         }
         return ((high & 0xffff) << 16) | (low & 0xffff);
@@ -98,21 +123,6 @@ public class Checksum {
         return (high << 16) | (low & 0xffff);
     }
     
-    /**
-     * Initialize checksums for source. The checksum for the <code>chunkSize</code> bytes at offset
-     * <code>chunkSize</code> * i is inserted into an array at index i.
-     */
-    public void generateChecksums(SeekableSource source, int chunkSize) throws IOException {
-        byte buf[] = new byte[chunkSize];
-        int count = 0;
-        while (true) {
-            int read = source.read(buf, 0, chunkSize);
-            if (read < chunkSize)
-                break;
-            checksums.put(queryChecksum(buf, chunkSize), count++);
-        }
-    }
-    
     public static char[] getSingleHash() {
         return single_hash;
     }
@@ -122,4 +132,17 @@ public class Checksum {
             return -1;
         return checksums.get(hashf);
     }
+
+    /**
+     * Returns a debug <code>String</code>.
+     */
+    @Override
+    public String toString()
+    {
+        return super.toString() +
+            " checksums=" + new TLongIntHashMapDecorator(this.checksums) +
+            "";
+    }
+    
+    
 }

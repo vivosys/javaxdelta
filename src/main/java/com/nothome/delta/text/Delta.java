@@ -4,7 +4,6 @@
   * Copyright (c) 2002 Nicolas PERIDONT
   * Bug Fixes: Daniel Morrione dan@morrione.net
   * Copyright (c) 2006 Heiko Klein
-  * Copyright (c) 2008 Elias Ross
   *
   * Permission is hereby granted, free of charge, to any person obtaining a
   * copy of this software and associated documentation files (the "Software"),
@@ -24,6 +23,13 @@
   * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   * IN THE SOFTWARE.
   *
+  * Change Log:
+  * iiimmddyyn  nnnnn  Description
+  * ----------  -----  -------------------------------------------------------
+  * gls100603a         Fixes from Torgeir Veimo and Dan Morrione
+  * gls110603a         Stream not being closed thus preventing a file from
+  *                       being subsequently deleted.
+  * gls031504a         Error being written to stderr rather than throwing exception
   */
 
 package com.nothome.delta.text;
@@ -35,7 +41,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -43,231 +48,289 @@ import java.io.Writer;
 import java.nio.CharBuffer;
 
 /**
- * Calcutes a delta (patch) between two text sources.
- * 
- * <li>TODO Set the checksum block size based on input size.
- * <li>TODO Update the checksum, rather than recalculate each time
- * 
- * @author Elias Ross
+ * Class for computing deltas against a source.
+ * The source file is read by blocks and a hash is computed per block.
+ * Then the target is scanned for matching blocks.
+ * <p/>
+ * Essentially a duplicate of com.nothome.delta.Delta for character streams.
  */
 public class Delta {
     
-    public final static boolean debug = false;
-    
-    private SeekableSource source;
-    private Reader targetReader;
-    private int targetLength;
+    /**
+     * Debug flag.
+     */
+    final static boolean debug = true;
     
     /**
-     * Constructs a new Delta with seekable source, target reader, and target reader length.
+     * Default size of 16.
+     * For "Lorem ipsum" files, the ideal size is about 14. Any smaller and
+     * the patch size becomes actually be larger.
+     * <p>
+     * Use a size like 64 or 128 for large files.
      */
-    public Delta(SeekableSource source, Reader targetReader, long l) {
-        if (source == null)
-            throw new NullPointerException("source");
-        if (targetReader == null)
-            throw new NullPointerException("target");
-        this.source = source;
-        this.targetReader = targetReader;
-        // TODO support Long
-        this.targetLength = (int)l;
+    public static final int DEFAULT_CHUNK_SIZE = 1<<4;
+    
+    /**
+     * Chunk Size.
+     */
+    private int S;
+    
+    public Delta() {
+        setChunkSize(DEFAULT_CHUNK_SIZE);
     }
     
     /**
-     * Constructs a new Delta.
+     * Sets the chunk size used.
+     * Larger chunks are faster and use less memory, but create larger patches
+     * as well.
+     * 
+     * @param size
      */
-    public Delta(CharSequence source, CharSequence target) {
-        this.source = new CharBufferSeekableSource(source);
-        this.targetReader = new StringReader(target.toString());
-        this.targetLength = target.length();
+    public void setChunkSize(int size) {
+        if (size <= 0)
+            throw new IllegalArgumentException("Invalid size");
+        S = size;
     }
     
     /**
-     * Generates and outputs a delta using the default {@link GDiffTextWriter} format.
+     * Compares the source bytes with target bytes, writing to output.
      */
-    public void writeDelta(Writer output) throws IOException
-    {
-        writeDelta(new GDiffTextWriter(output));
+    public void compute(CharSequence source, CharSequence target, Writer output)
+    throws IOException {
+        compute(new CharBufferSeekableSource(source), 
+                new StringReader(target.toString()),
+                new GDiffTextWriter(output));
     }
-
+    
     /**
-     * Returns a delta as a string.
-     * @see #writeDelta(Writer)
+     * Compares the source bytes with target bytes, returning differences.
      */
-    public String getDelta() throws IOException
-    {
+    public String compute(CharSequence source, CharSequence target)
+    throws IOException {
         StringWriter sw = new StringWriter();
-        writeDelta(sw);
+        compute(source, target, sw);
         return sw.toString();
     }
     
     /**
-     * Generates and outputs a delta.
+     * Compares the source with a target, writing to output.
+     * 
+     * @param targetIS second file to compare with
+     * @param output diff output
+     * 
+     * @throws IOException if diff generation fails
      */
-    public void writeDelta(DiffTextWriter output)
+    public void compute(SeekableSource seekSource, Reader targetIS, DiffTextWriter output)
     throws IOException {
-        writeDelta0(output);
+        
+        if (debug) {
+            debug("using match length S = " + S);
+        }
+        
+        SourceState source = new SourceState(seekSource);
+        TargetState target = new TargetState(targetIS);
+        if (debug)
+            debug("checksums " + source.checksum);
+        
+        while (!target.eof()) {
+            debug("!target.eof()");
+            int index = target.find(source);
+            if (index != -1) {
+                if (debug)
+                    debug("found hash " + index);
+                int offset = index * S;
+                source.seek(offset);
+                int match = target.longestMatch(source);
+                if (debug)
+                    debug("output.addCopy("+offset+","+match+")");
+                output.addCopy(offset, match);
+            } else {
+                int i = target.read();
+                if (debug)
+                    debug("addData " + (char)i);
+                if (i == -1)
+                    break;
+                output.addData((char)i);
+            }
+        }
         output.flush();
     }
+    
+    class SourceState {
+
+        private Checksum checksum;
+        private SeekableSource source;
         
-    /**
-     * 
-     * @param output
-     * @throws IOException
-     */
-    private void writeDelta0(DiffTextWriter output)
-    throws IOException {
-        Checksum checksum = new Checksum(source);
-        
-        int S = Checksum.S;
-        int buff_size = 64 * S;
-        
-        source.seek(0);
-        
-        PushbackReader target = new PushbackReader(targetReader, buff_size);
-        
-        char buf[] = new char[S];
-        char b[] = new char[1];
-        char sourcechar[] = new char[S];
-        CharBuffer sourcecharbuf = CharBuffer.wrap(sourcechar);
-        
-        if (targetLength <= S || checksum.getLength() <= S) {
-            // simply return the complete target as diff
-            int readBytes;
-            while ((readBytes = target.read(buf)) >= 0) {
-                output.addData(CharBuffer.wrap(buf, 0, readBytes));
-            }
-            return;
+        public SourceState(SeekableSource source) throws IOException {
+            checksum = new Checksum(source, S);
+            this.source = source;
+            source.seek(0);
+        }
+
+        public void seek(long index) throws IOException {
+            source.seek(index);
+        }
+
+        /**
+         * Returns a debug <code>String</code>.
+         */
+        @Override
+        public String toString()
+        {
+            return "Source"+
+                " checksum=" + this.checksum +
+                " source=" + this.source +
+                "";
         }
         
-        // initialize first complete checksum.
-        int bytesRead = target.read(buf, 0, S);
-        int targetidx = bytesRead;
+    }
         
-        long hashf = Checksum.queryChecksum(CharBuffer.wrap(buf));
+    class TargetState {
         
-        /*This flag indicates that we've run out of source bytes*/
-        boolean sourceOutofBytes = false;
+        private Readable c;
+        private CharBuffer tbuf = CharBuffer.allocate(blocksize());
+        private CharBuffer sbuf = CharBuffer.allocate(blocksize());
+        private long hash;
+        private boolean hashReset = true;
+        private boolean eof;
         
-        boolean done = false;
-        while (!done) {
-            
-            Integer index = checksum.findChecksumIndex(hashf);
-            if (index != null) {
-                
-                boolean match = true;
-                int offset = index * S;
-                int length = S - 1;
-                source.seek(offset);
-                sourcecharbuf.clear();
-                
-                //				possible match, need to check byte for byte
-                if (sourceOutofBytes == false
-                        && source.read(sourcecharbuf) == S) {
-                    for (int ix = 0; ix < S; ix++) {
-                        if (sourcechar[ix] != buf[ix]) {
-                            match = false;
-                        }
+        TargetState(Reader targetIS) throws IOException {
+            c = targetIS;
+            tbuf.limit(0);
+        }
+        
+        private int blocksize() {
+            return Math.min(1024, S * 4);
+        }
+
+        /**
+         * Returns the index of the next N bytes of the stream.
+         */
+        public int find(SourceState source) throws IOException {
+            if (eof)
+                return -1;
+            sbuf.clear();
+            sbuf.limit(0);
+            if (hashReset) {
+                debug("hashReset");
+                while (tbuf.remaining() < S) {
+                    tbuf.compact();
+                    int read = c.read(tbuf);
+                    tbuf.flip();
+                    if (read == -1) {
+                        debug("target ending");
+                        return -1;
                     }
-                } else {
-                    sourceOutofBytes = true;
                 }
-                
-                if (match & sourceOutofBytes == false) {
-                    
-                    boolean ok = true;
-                    CharBuffer sourceBuff = CharBuffer.allocate(buff_size);
-                    char[] targetBuff = new char[buff_size];
-                    int source_idx = 0;
-                    int target_idx = 0;
-                    
-                    do {
-                        source_idx = source.read(sourceBuff);
-                        //System.out.print("Source: "+ source_idx);
-                        if (source_idx == -1) {
-                            /*Ran our of source bytes during match, so flag this*/
-                            sourceOutofBytes = true;
-                            //System.out.println("Source out ... target has: " + target.available());
-                            break;
-                        }
-                        sourceBuff.flip();
-                        
-                        /*Don't read more target bytes then source bytes ... this is *VERY* important*/
-                        target_idx = target.read(targetBuff, 0, source_idx);
-                        if (target_idx == -1) {
-                            break;
-                        }
-                        
-                        int read_idx = Math.min(source_idx, target_idx);
-                        int i = 0;
-                        do {
-                            targetidx++;
-                            ++length;
-                            ok = sourceBuff.get() == targetBuff[i];
-                            i++;
-                            if (!ok) {
-                                b[0] = targetBuff[i - 1];
-                                
-                                if (target_idx != -1) {
-                                    target.unread(
-                                            targetBuff,
-                                            i,
-                                            target_idx - i);
-                                }
-                            }
-                        } while (i < read_idx && ok);
-                        b[0] = targetBuff[i-1]; //gls100603a (fix from Dan Morrione)
-                    }
-                    while(ok && targetLength-targetidx > 0);
-                    
-                    output.addCopy(offset, length);
-                    
-                    if (targetLength - targetidx <= S-1) {
-                        // eof reached, special case for last bytes
-                        buf[0] = b[0];
-                        int remaining = targetLength - targetidx;
-                        if (debug)
-                            System.out.println("last part of file " + remaining);
-                        int readStatus=target.read(buf, 1, remaining);
-                        targetidx += remaining;
-                        output.addData(CharBuffer.wrap(buf, 0, remaining + 1));
-                        done = true;
-                    } else {
-                        buf[0] = b[0];
-                        int count = target.read(buf, 1, S - 1);
-                        targetidx += count;
-                    }
-                    continue; //continue loop
-                }
+                hash = Checksum.queryChecksum(tbuf, S);
+                hashReset = false;
             }
-            
-            if (targetLength - targetidx > 0) {
-                // update the adler fingerpring with a single byte
-                
-                target.read(b, 0, 1);
-                targetidx += 1;
-                
-                // insert instruction with the old byte we no longer use...
-                output.addData(CharBuffer.wrap(buf, 0, 1));
-                
-                int S1 = S -1;
-                for (int j = 0; j < S1; j++)
-                    buf[j] = buf[j + 1];
-                buf[S1] = b[0];
-                hashf = Checksum.queryChecksum(CharBuffer.wrap(buf));
-                
-                if (debug)
-                    System.out.println(
-                            "raw: "
-                            + Integer.toHexString((int) hashf));
-                
+            if (debug)
+                debug("hash " + hash + " " + dump());
+            return source.checksum.findChecksumIndex(hash);
+        }
+
+        public boolean eof() {
+            return eof;
+        }
+
+        /**
+         * Reads a char.
+         * @throws IOException
+         */
+        public int read() throws IOException {
+            if (tbuf.remaining() <= S) {
+                readMore();
+            }
+            if (!tbuf.hasRemaining()) {
+                eof = true;
+                return -1;
+            }
+            char b = tbuf.get();
+            if (tbuf.remaining() >= S) {
+                char nchar = tbuf.get( tbuf.position() + S -1 );
+                hash = Checksum.incrementChecksum(hash, b, nchar, S);
             } else {
-                output.addData(CharBuffer.wrap(buf));
-                done = true;
+                debug("out of char");
             }
-            
+            return b;
         }
+
+        /**
+         * Returns the longest match length at the source location.
+         */
+        public int longestMatch(SourceState source) throws IOException {
+            debug("longestMatch");
+            int match = 0;
+            hashReset = true;
+            while (true) {
+                if (!sbuf.hasRemaining()) {
+                    sbuf.clear();
+                    int read = source.source.read(sbuf);
+                    sbuf.flip();
+                    if (read == -1)
+                        return match;
+                }
+                if (!tbuf.hasRemaining()) {
+                    readMore();
+                    if (!tbuf.hasRemaining()) {
+                        debug("target ending");
+                        eof = true;
+                        return match;
+                    }
+                }
+                if (sbuf.get() != tbuf.get()) {
+                    tbuf.position(tbuf.position() - 1);
+                    return match;
+                }
+                match++;
+            }
+        }
+
+        private void readMore() throws IOException {
+            if (debug)
+                debug("readMore " + tbuf);
+            tbuf.compact();
+            c.read(tbuf);
+            tbuf.flip();
+        }
+
+        void hash() {
+            hash = Checksum.queryChecksum(tbuf, S);
+        }
+
+        /**
+         * Returns a debug <code>String</code>.
+         */
+        @Override
+        public String toString()
+        {
+            return "Target[" +
+                " targetBuff=" + dump() + // this.tbuf +
+                " sourceBuff=" + this.sbuf +
+                " hashf=" + this.hash +
+                " eof=" + this.eof +
+                "]";
+        }
+        
+        private String dump() { return dump(tbuf); }
+        
+        private String dump(CharBuffer bb) {
+            bb.mark();
+            StringBuilder sb = new StringBuilder();
+            while (bb.hasRemaining())
+                sb.append((char)bb.get());
+            bb.reset();
+            return sb.toString();
+        }
+        
     }
     
+    private void debug(String s) {
+        if (debug)
+            System.err.println(s);
+    }
+
     static Reader forFile(File name) throws FileNotFoundException {
         FileInputStream f1 = new FileInputStream(name);
         InputStreamReader isr = new InputStreamReader(f1);
@@ -294,9 +357,9 @@ public class Delta {
         File f2 = new File(s[1]);
         Reader r2 = forFile(f2);
         CharSequence sb = toString(r1);
-        Delta d = new Delta(new CharBufferSeekableSource(sb), r2, f2.length());
+        Delta d = new Delta();
         OutputStreamWriter osw = new OutputStreamWriter(System.out);
-        d.writeDelta(new GDiffTextWriter(osw));
+        d.compute(new CharBufferSeekableSource(sb), r2, new GDiffTextWriter(osw));
         osw.close();
     }
     

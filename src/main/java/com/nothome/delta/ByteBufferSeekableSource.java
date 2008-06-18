@@ -34,7 +34,7 @@ import java.nio.ByteBuffer;
  * 
  * @author Heiko Klein
  */
-public class ByteArraySeekableSource implements SeekableSource {
+public class ByteBufferSeekableSource implements SeekableSource {
     
     private ByteBuffer bb;
     private ByteBuffer cur;
@@ -42,7 +42,7 @@ public class ByteArraySeekableSource implements SeekableSource {
     /**
      * Constructs a new ByteArraySeekableSource.
      */
-    public ByteArraySeekableSource(byte[] source) {
+    public ByteBufferSeekableSource(byte[] source) {
         if (source == null)
             throw new NullPointerException("source");
         this.bb = ByteBuffer.wrap(source);
@@ -51,7 +51,7 @@ public class ByteArraySeekableSource implements SeekableSource {
     /**
      * Constructs a new ByteArraySeekableSource.
      */
-    public ByteArraySeekableSource(ByteBuffer bb) {
+    public ByteBufferSeekableSource(ByteBuffer bb) {
         if (bb == null)
             throw new NullPointerException("bb");
         this.bb = bb;
@@ -65,12 +65,15 @@ public class ByteArraySeekableSource implements SeekableSource {
         cur.position((int) pos);
     }
     
-    public int read(byte[] b, int off, int len) throws IOException {
+    public int read(ByteBuffer dest) throws IOException {
         if (!bb.hasRemaining())
             return -1;
-        int read = Math.min(len, bb.remaining());
-        bb.get(b, off, read);
-        return read;
+        int c = 0;
+        while (bb.hasRemaining() && dest.hasRemaining()) {
+            dest.put(bb.get());
+            c++;
+        }
+        return c;
     }
     
     public long length() throws IOException {

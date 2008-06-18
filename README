@@ -13,8 +13,9 @@ format and produces the original file.
 TODO:
  - create unit test for delta generation and patching with random data
  - other output formats
+ - large files
    
 
 
 -Torgeir  <torgeir@pobox.com>
-
+-Elias <genman@noderunner.net>

@@ -50,8 +50,9 @@ public class DeltaPatchTest {
 
     private File test1File;
     private File test2File;
+    private int chunkSize;
     
-    ByteArrayOutputStream read(File f) throws IOException {
+    static ByteArrayOutputStream read(File f) throws IOException {
         FileInputStream fis = new FileInputStream(f);
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -68,6 +69,7 @@ public class DeltaPatchTest {
 
     @Before
     public void setUp() throws Exception {
+        chunkSize = Delta.DEFAULT_CHUNK_SIZE;
     }
 
     @After
@@ -88,7 +90,7 @@ public class DeltaPatchTest {
     }
         
     @Test
-    public void testLorem3() throws IOException {
+    public void testLorem22() throws IOException {
         use("lorem2.txt", "lorem2.txt");
         doTest();
     }
@@ -96,6 +98,8 @@ public class DeltaPatchTest {
     @Test
     public void testLoremLong() throws IOException {
         use("lorem-long.txt", "lorem-long2.txt");
+        // doTest();
+        chunkSize = 8;
         doTest();
     }
     
@@ -106,8 +110,28 @@ public class DeltaPatchTest {
     }
     
     @Test
+    public void testLoremLong3() throws IOException {
+        use("lorem-long.txt", "lorem-long3.txt");
+        doTest();
+        chunkSize = 14;
+        doTest();
+    }
+    
+    @Test
     public void testVer() throws IOException {
         use("ver1.txt", "ver2.txt");
+        doTest();
+    }
+        
+    @Test
+    public void testVer34() throws IOException {
+        use("ver3.txt", "ver4.txt");
+        doTest();
+    }
+        
+    @Test
+    public void testVer21() throws IOException {
+        use("ver2.txt", "ver1.txt");
         doTest();
     }
         
@@ -117,17 +141,20 @@ public class DeltaPatchTest {
         DiffWriter output = new GDiffWriter(new DataOutputStream(
                 new BufferedOutputStream(new FileOutputStream(delta))));
         Delta d = new Delta();
+        d.setChunkSize(chunkSize);
         d.compute(test1File, test2File, output);
         output.close();
 
         assertTrue(delta.exists());
         
+        System.out.println("delta length " + delta.length() + " for " + test1File + " " + test2File);
         // System.out.println(read(delta).toString());
+        System.out.println("end patch");
 
         new GDiffPatcher(test1File, delta, patchedFile);
         assertTrue(patchedFile.exists());
 
-        assertEquals(patchedFile.length(), test2File.length());
+        assertEquals("file length", test2File.length(), patchedFile.length());
         byte[] buf = new byte[(int) test2File.length()];
         FileInputStream is = new FileInputStream(patchedFile);
         is.read(buf);
