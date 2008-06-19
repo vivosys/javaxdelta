@@ -148,10 +148,11 @@ public class DeltaPatchTest {
         assertTrue(delta.exists());
         
         System.out.println("delta length " + delta.length() + " for " + test1File + " " + test2File);
-        // System.out.println(read(delta).toString());
+        System.out.println(read(delta).toString());
         System.out.println("end patch");
 
-        new GDiffPatcher(test1File, delta, patchedFile);
+		GDiffPatcher diffPatcher = new GDiffPatcher();
+        diffPatcher.patch(test1File, delta, patchedFile);
         assertTrue(patchedFile.exists());
 
         assertEquals("file length", test2File.length(), patchedFile.length());

@@ -59,7 +59,7 @@ public class Delta {
     /**
      * Debug flag.
      */
-    final static boolean debug = true;
+    final static boolean debug = false;
     
     /**
      * Default size of 16.
@@ -74,6 +74,10 @@ public class Delta {
      * Chunk Size.
      */
     private int S;
+    
+    private SourceState source;
+    private TargetState target;
+    private DiffTextWriter output;
     
     public Delta() {
         setChunkSize(DEFAULT_CHUNK_SIZE);
@@ -127,8 +131,9 @@ public class Delta {
             debug("using match length S = " + S);
         }
         
-        SourceState source = new SourceState(seekSource);
-        TargetState target = new TargetState(targetIS);
+        source = new SourceState(seekSource);
+        target = new TargetState(targetIS);
+        this.output = output;
         if (debug)
             debug("checksums " + source.checksum);
         
@@ -141,19 +146,27 @@ public class Delta {
                 int offset = index * S;
                 source.seek(offset);
                 int match = target.longestMatch(source);
-                if (debug)
-                    debug("output.addCopy("+offset+","+match+")");
-                output.addCopy(offset, match);
+                if (match >= S) {
+                    if (debug)
+                        debug("output.addCopy("+offset+","+match+")");
+                    output.addCopy(offset, match);
+                } else {
+                    addData();
+                }
             } else {
-                int i = target.read();
-                if (debug)
-                    debug("addData " + (char)i);
-                if (i == -1)
-                    break;
-                output.addData((char)i);
+                    addData();
             }
         }
-        output.flush();
+        output.close();
+    }
+    
+    private void addData() throws IOException {
+        int i = target.read();
+        if (debug)
+            debug("addData " + (char)i);
+        if (i == -1)
+            return;
+        output.addData((char)i);
     }
     
     class SourceState {

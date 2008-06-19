@@ -43,9 +43,7 @@ public class ByteBufferSeekableSource implements SeekableSource {
      * Constructs a new ByteArraySeekableSource.
      */
     public ByteBufferSeekableSource(byte[] source) {
-        if (source == null)
-            throw new NullPointerException("source");
-        this.bb = ByteBuffer.wrap(source);
+        this(ByteBuffer.wrap(source));
     }
     
     /**
@@ -55,33 +53,47 @@ public class ByteBufferSeekableSource implements SeekableSource {
         if (bb == null)
             throw new NullPointerException("bb");
         this.bb = bb;
+        bb.rewind();
+        try {
+            seek(0);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public void seek(long pos) throws IOException {
-        bb.rewind();
         cur = bb.slice();
         if (pos > cur.limit())
-            throw new IllegalArgumentException("pos " + pos + " cannot seek " + cur.limit());
+            throw new IOException("pos " + pos + " cannot seek " + cur.limit());
         cur.position((int) pos);
     }
     
     public int read(ByteBuffer dest) throws IOException {
-        if (!bb.hasRemaining())
+        if (!cur.hasRemaining())
             return -1;
         int c = 0;
-        while (bb.hasRemaining() && dest.hasRemaining()) {
-            dest.put(bb.get());
+        while (cur.hasRemaining() && dest.hasRemaining()) {
+            dest.put(cur.get());
             c++;
         }
         return c;
-    }
-    
-    public long length() throws IOException {
-        return bb.limit();
     }
     
     public void close() throws IOException {
         bb = null;
         cur = null;
     }
+
+    /**
+     * Returns a debug <code>String</code>.
+     */
+    @Override
+    public String toString()
+    {
+        return "BBSeekable" +
+            " bb=" + this.bb.position() + "-" + bb.limit() +
+            " cur=" + this.cur.position() + "-" + cur.limit() +
+            "";
+    }
+    
 }

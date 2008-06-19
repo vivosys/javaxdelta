@@ -75,6 +75,10 @@ public class Delta {
      */
     private int S;
     
+    private SourceState source;
+    private TargetState target;
+    private DiffWriter output;
+    
     public Delta() {
         setChunkSize(DEFAULT_CHUNK_SIZE);
     }
@@ -97,8 +101,8 @@ public class Delta {
      */
     public void compute(byte source[], byte target[], OutputStream output)
     throws IOException {
-        compute(new ByteBufferSeekableSource(target), 
-                new ByteArrayInputStream(target), target.length,
+        compute(new ByteBufferSeekableSource(source), 
+                new ByteArrayInputStream(target),
                 new GDiffWriter(output));
     }
     
@@ -106,9 +110,9 @@ public class Delta {
      * Compares the source bytes with target input, writing to output.
      */
     public void compute(byte[] sourceBytes, InputStream inputStream,
-            int targetSize, DiffWriter diffWriter) throws IOException {
+            DiffWriter diffWriter) throws IOException {
         compute(new ByteBufferSeekableSource(sourceBytes), 
-                inputStream, targetSize, diffWriter);
+                inputStream, diffWriter);
     }
     
     /**
@@ -122,7 +126,7 @@ public class Delta {
         RandomAccessFileSeekableSource source = new RandomAccessFileSeekableSource(new RandomAccessFile(sourceFile, "r"));
         InputStream is = new BufferedInputStream(new FileInputStream(targetFile));
         try {
-            compute(source, is, (int)targetFile.length(), output);
+            compute(source, is, output);
         } finally {
             source.close();
             is.close();
@@ -133,30 +137,20 @@ public class Delta {
      * Compares the source with a target, writing to output.
      * 
      * @param targetIS second file to compare with
-     * @param targetLength target file length
      * @param output diff output
      * 
      * @throws IOException if diff generation fails
      */
-    public void compute(SeekableSource seekSource, InputStream targetIS, int targetLength, DiffWriter output)
+    public void compute(SeekableSource seekSource, InputStream targetIS, DiffWriter output)
     throws IOException {
         
         if (debug) {
             debug("using match length S = " + S);
         }
         
-        /*
-        if (targetLength <= S || seekSource.length() <= S) {
-            int readBytes;
-            while ((readBytes = targetIS.read()) >= 0) {
-                output.addData((byte)readBytes);
-            }
-            return;
-        }
-        */
-        
-        SourceState source = new SourceState(seekSource);
-        TargetState target = new TargetState(targetIS);
+        source = new SourceState(seekSource);
+        target = new TargetState(targetIS);
+        this.output = output;
         if (debug)
             debug("checksums " + source.checksum);
         
@@ -166,22 +160,30 @@ public class Delta {
             if (index != -1) {
                 if (debug)
                     debug("found hash " + index);
-                int offset = index * S;
+                long offset = (long)index * S;
                 source.seek(offset);
                 int match = target.longestMatch(source);
-                if (debug)
-                    debug("output.addCopy("+offset+","+match+")");
-                output.addCopy(offset, match);
+                if (match >= S) {
+                    if (debug)
+                        debug("output.addCopy("+offset+","+match+")");
+                    output.addCopy(offset, match);
+                } else {
+                    addData();
+                }
             } else {
-                int i = target.read();
-                if (debug)
-                    debug("addData " + (char)i);
-                if (i == -1)
-                    break;
-                output.addData((byte)i);
+                addData();
             }
         }
-        output.flush();
+        output.close();
+    }
+    
+    private void addData() throws IOException {
+        int i = target.read();
+        if (debug)
+            debug("addData " + (char)i);
+        if (i == -1)
+            return;
+        output.addData((byte)i);
     }
     
     class SourceState {
@@ -228,7 +230,8 @@ public class Delta {
         }
         
         private int blocksize() {
-            return Math.min(1024, S * 4);
+            return 1024 * 100;
+            // return Math.min(1024, S * 4);
         }
 
         /**
@@ -281,7 +284,7 @@ public class Delta {
             } else {
                 debug("out of char");
             }
-            return b;
+            return b & 0xFF;
         }
 
         /**

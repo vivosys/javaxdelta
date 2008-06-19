@@ -24,8 +24,6 @@
 
 package com.nothome.delta;
 
-
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -88,10 +86,6 @@ public class GDiffWriter implements DiffWriter {
     public void setDebug(boolean flag) { debug = flag; }
        
     public void addCopy(long offset, int length) throws IOException {
-        addCopy0((int)offset, length);
-    }
-    
-    private void addCopy0(int offset, int length) throws IOException {
         writeBuf();
         
         //output debug data        
@@ -102,39 +96,40 @@ public class GDiffWriter implements DiffWriter {
         if (offset > Integer.MAX_VALUE) {
             // Actually, we don't support longer files than int.MAX_VALUE at the moment..
             output.writeByte(COPY_LONG_INT);
+            output.writeLong(offset);
+            output.writeInt(length);
         } else if (offset < 65536)  {
             if (length < 256) {                
                 output.writeByte(COPY_USHORT_UBYTE);
-                output.writeShort(offset);
+                output.writeShort((int)offset);
                 output.writeByte(length);
             } else if (length > 65535) {
                 output.writeByte(COPY_USHORT_INT);
-                output.writeShort(offset);
+                output.writeShort((int)offset);
                 output.writeInt(length);
             } else {
                 output.writeByte(COPY_USHORT_USHORT);
-                output.writeShort(offset);
+                output.writeShort((int)offset);
                 output.writeShort(length);
             }
         } else {
             if (length < 256) {
                 output.writeByte(COPY_INT_UBYTE);
-                output.writeInt(offset);
+                output.writeInt((int)offset);
                 output.writeByte(length);
             } else if (length > 65535) {
                 output.writeByte(COPY_INT_INT);
-                output.writeInt(offset);
+                output.writeInt((int)offset);
                 output.writeInt(length);
             } else {
                 output.writeByte(COPY_INT_USHORT);
-                output.writeInt(offset);
+                output.writeInt((int)offset);
                 output.writeShort(length);
             }
         }
     }
     
     public void addData(byte b) throws IOException {
-        if (b == 0) throw new IOException("zero");
         buf.write(b);
         if (buf.size() >= CHUNK_SIZE)
             writeBuf();

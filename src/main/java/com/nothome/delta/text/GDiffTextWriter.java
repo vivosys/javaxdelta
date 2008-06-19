@@ -86,7 +86,7 @@ public class GDiffTextWriter implements DiffTextWriter {
      * Although this could be arbitrarily large, this caps
      * the buffer size, facilitating reading. 
      */
-    public static int CHUNK_SIZE = 32 * 1024;
+    public static final int CHUNK_SIZE = 32 * 1024;
 
     /**
      * Constructs a new GDiffTextWriter.

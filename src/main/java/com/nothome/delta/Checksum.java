@@ -81,10 +81,8 @@ public class Checksum {
         ByteBuffer bb = ByteBuffer.allocate(chunkSize * 2);
         int count = 0;
         while (true) {
-            int read = source.read(bb);
-            // System.out.println("READ " + read);
+            source.read(bb);
             bb.flip();
-            // System.out.println("got " + bb);
             if (bb.remaining() < chunkSize)
                 break;
             while (bb.remaining() >= chunkSize) {
@@ -93,7 +91,6 @@ public class Checksum {
             }
             bb.compact();
         }
-        System.out.println("break " + bb);
     }
     
     /**

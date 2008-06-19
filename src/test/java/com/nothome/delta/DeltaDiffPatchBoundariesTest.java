@@ -119,12 +119,15 @@ public class DeltaDiffPatchBoundariesTest {
 
             System.out.println(fmt(DeltaPatchTest.read(deltaFile)));
 
-			new GDiffPatcher( test1File, deltaFile, patchedFile );
+			GDiffPatcher diffPatcher = new GDiffPatcher();
+			diffPatcher.patch(test1File, deltaFile, patchedFile );
 			assertTrue( patchedFile.exists() );
 
 			assertEquals( (long)string2.getBytes().length, patchedFile.length() );
 			byte[] buf = new byte[string2.getBytes().length];
-			new FileInputStream( patchedFile ).read( buf );
+			FileInputStream is = new FileInputStream( patchedFile );
+			is.read( buf );
+			is.close();
 
 			String got = new String( buf );
 			assertEquals( string2, got );

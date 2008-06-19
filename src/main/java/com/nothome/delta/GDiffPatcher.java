@@ -25,6 +25,20 @@
 
 package com.nothome.delta;
 
+import static com.nothome.delta.GDiffWriter.COPY_INT_INT;
+import static com.nothome.delta.GDiffWriter.COPY_INT_UBYTE;
+import static com.nothome.delta.GDiffWriter.COPY_INT_USHORT;
+import static com.nothome.delta.GDiffWriter.COPY_LONG_INT;
+import static com.nothome.delta.GDiffWriter.COPY_USHORT_INT;
+import static com.nothome.delta.GDiffWriter.COPY_USHORT_UBYTE;
+import static com.nothome.delta.GDiffWriter.COPY_USHORT_USHORT;
+import static com.nothome.delta.GDiffWriter.DATA_INT;
+import static com.nothome.delta.GDiffWriter.DATA_MAX;
+import static com.nothome.delta.GDiffWriter.DATA_USHORT;
+import static com.nothome.delta.GDiffWriter.EOF;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -36,8 +50,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-
-import static com.nothome.delta.GDiffWriter.*;
 
 /**
  * This class patches an input file with a GDIFF patch fil�e.
@@ -52,12 +64,18 @@ public class GDiffPatcher {
 
     /**
      * Constructs a new GDiffPatcher.
+     */
+    public GDiffPatcher() {
+    }
+    
+    /**
+     * Patches to output file.
      * @param sourceFile
      * @param patchFile
      * @param outputFile
      * @throws IOException
      */
-    public GDiffPatcher(File sourceFile, File patchFile, File outputFile)
+    public void patch(File sourceFile, File patchFile, File outputFile)
 		throws IOException
 	{
         RandomAccessFileSeekableSource source =new RandomAccessFileSeekableSource(new RandomAccessFile(sourceFile, "r")); 
@@ -75,26 +93,35 @@ public class GDiffPatcher {
     }
     
     /**
-     * Constructs a new GDiffPatcher.
+     * Patches to output.
      * @param source
      * @param patch
      * @param output
      * @throws IOException
      * @throws PatchException
      */
-    public GDiffPatcher(byte[] source, InputStream patch, OutputStream output) throws IOException, PatchException{
-        this(new ByteBufferSeekableSource(source), patch, output);
+    public void patch(byte[] source, InputStream patch, OutputStream output) throws IOException, PatchException{
+        patch(new ByteBufferSeekableSource(source), patch, output);
     }
     
     /**
-     * Constructs a new GDiffPatcher.
+     * Patches in memory.
+     */
+    public byte[] patch(byte[] source, byte[] patch) throws IOException, PatchException{
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        patch(source, new ByteArrayInputStream(patch), os);
+        return os.toByteArray();
+    }
+    
+    /**
+     * Patches to output.
      * @param source
      * @param patch
      * @param out
      * @throws IOException
      * @throws PatchException
      */
-    public GDiffPatcher(SeekableSource source, InputStream patch, OutputStream out) throws IOException, PatchException {
+    public void patch(SeekableSource source, InputStream patch, OutputStream out) throws IOException, PatchException {
         runPatch(source, patch, out);
     }
     
@@ -184,6 +211,8 @@ public class GDiffPatcher {
             int len = Math.min(buf.capacity(), length);
             buf.clear().limit(len);
             int res = source.read(buf);
+            if (res == -1)
+                throw new EOFException("in copy " + offset + " " + length);
             output.write(buf.array(), 0, res);
             length -= res;
         }
@@ -221,7 +250,8 @@ public class GDiffPatcher {
                 System.err.println("aborting..");
                 return;
             }
-            new GDiffPatcher(sourceFile, patchFile, outputFile);
+            GDiffPatcher patcher = new GDiffPatcher();
+            patcher.patch(sourceFile, patchFile, outputFile);
 
             System.out.println("finished patching file");
 

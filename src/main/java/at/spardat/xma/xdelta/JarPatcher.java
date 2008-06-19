@@ -98,15 +98,14 @@ public class JarPatcher {
 
                     patchEntry = patch.getEntry(fileName+".gdiff");
                     if(patchEntry!=null) { // changed Entry
-                        InputStream patchStream = patch.getInputStream(patchEntry);
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                        new GDiffPatcher(sourceBytes,patchStream,outputStream);
-                        outputStream.close();
-
                         ZipEntry outputEntry = new ZipEntry(sourceEntry.getName());
                         outputEntry.setTime(patchEntry.getTime());
                         output.putNextEntry(outputEntry);
-                        output.write(outputStream.toByteArray());
+                        
+                        InputStream patchStream = patch.getInputStream(patchEntry);
+                        GDiffPatcher diffPatcher = new GDiffPatcher();
+                        diffPatcher.patch(sourceBytes,patchStream,output);
+                        patchStream.close();
 
                     } else { // unchanged Entry
                         ZipEntry outputEntry = new ZipEntry(sourceEntry);

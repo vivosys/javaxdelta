@@ -22,13 +22,18 @@
  */
 package at.spardat.xma.xdelta;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
-import java.util.zip.ZipEntry;
-import java.util.Enumeration;
-import java.io.*;
 
-import com.nothome.delta.Checksum;
 import com.nothome.delta.Delta;
 import com.nothome.delta.DiffWriter;
 import com.nothome.delta.GDiffWriter;
@@ -98,7 +103,7 @@ public class JarDelta {
         				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                         DiffWriter diffWriter = new GDiffWriter(new DataOutputStream(outputStream));
         				Delta d = new Delta();
-        				d.compute(sourceBytes,target.getInputStream(targetEntry),targetSize,diffWriter);
+        				d.compute(sourceBytes,target.getInputStream(targetEntry),diffWriter);
                         diffWriter.close();
 
         				ZipEntry outputEntry = new ZipEntry(targetEntry.getName()+".gdiff");
