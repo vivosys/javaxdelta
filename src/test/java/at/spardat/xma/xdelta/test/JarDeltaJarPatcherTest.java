@@ -79,21 +79,21 @@ public class JarDeltaJarPatcherTest {
     @Before
     public void setUp() throws Exception {
         sourceFile = File.createTempFile("JarDeltaJarPatcherTest_Source", ".zip");
-        // sourceFile.deleteOnExit();
+        sourceFile.deleteOnExit();
 
         targetFile = File.createTempFile("JarDeltaJarPatcherTest_Target", ".zip");
-        // targetFile.deleteOnExit();
+        targetFile.deleteOnExit();
 
         patchFile = File.createTempFile("JarDeltaJarPatcherTest_Patch", ".zip");
-        // patchFile.deleteOnExit();
+        patchFile.deleteOnExit();
 
         resultFile = File.createTempFile("JarDeltaJarPatcherTest_Result", ".zip");
-        // resultFile.deleteOnExit();
+        resultFile.deleteOnExit();
     }
 
     @After
     public void tearDown() throws Exception {
-        // cleanUp();
+        cleanUp();
     }
 
     /**
