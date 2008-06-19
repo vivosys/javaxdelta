@@ -309,7 +309,7 @@ public class JarDeltaJarPatcherTest {
     
     @Test
     public void testJarPatcherDerivedFileBig() throws Exception {
-        byteMaxLength = 10000;
+        byteMaxLength = 100000;
         entryMaxSize = 100;
         runJarPatcherDerivedFile();
     }
