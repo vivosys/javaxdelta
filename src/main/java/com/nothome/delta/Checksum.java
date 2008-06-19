@@ -132,6 +132,9 @@ public class Checksum {
         return (high << 16) | (low & 0xffff);
     }
     
+    /**
+     * 256 random hash values. 
+     */
     public static char[] getSingleHash() {
         return single_hash;
     }

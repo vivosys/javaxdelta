@@ -33,8 +33,6 @@ import java.nio.CharBuffer;
 
 /**
  * Checksum that uses character streams.
- * 
- * @author Elias Ross
  */
 public class Checksum {
     

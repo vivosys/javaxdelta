@@ -24,12 +24,13 @@
 
 package com.nothome.delta.text;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
  * Writes diff commands to a stream.
  */
-public interface DiffTextWriter {
+public interface DiffTextWriter extends Closeable {
     
     /**
      * Add a copy command.

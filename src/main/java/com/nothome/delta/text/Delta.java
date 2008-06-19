@@ -213,7 +213,7 @@ public class Delta {
         }
         
         private int blocksize() {
-            return Math.min(1024, S * 4);
+            return Math.min(1024 * 2, S * 4);
         }
 
         /**

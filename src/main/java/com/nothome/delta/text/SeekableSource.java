@@ -28,8 +28,6 @@ import java.io.IOException;
 
 /**
  * Text seekable source
- * 
- * @author Elias Ross
  */
 public interface SeekableSource extends Readable, Closeable {
     

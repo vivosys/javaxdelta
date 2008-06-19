@@ -248,8 +248,7 @@ public class Delta {
         }
         
         private int blocksize() {
-            return 1024 * 100;
-            // return Math.min(1024, S * 4);
+            return Math.min(1024 * 4, S * 4);
         }
 
         /**
@@ -290,10 +289,10 @@ public class Delta {
         public int read() throws IOException {
             if (tbuf.remaining() <= S) {
                 readMore();
-            }
-            if (!tbuf.hasRemaining()) {
-                eof = true;
-                return -1;
+                if (!tbuf.hasRemaining()) {
+                    eof = true;
+                    return -1;
+                }
             }
             byte b = tbuf.get();
             if (tbuf.remaining() >= S) {

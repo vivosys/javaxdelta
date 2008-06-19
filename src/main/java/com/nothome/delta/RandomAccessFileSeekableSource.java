@@ -33,8 +33,6 @@ import java.nio.ByteBuffer;
 
 /**
  * Wraps a random access file.
- * 
- * @author Heiko Klein
  */
 public class RandomAccessFileSeekableSource implements SeekableSource {
     

@@ -30,7 +30,6 @@ import java.io.IOException;
 
 /**
  * Thrown when a patch is invalid.
- * @author Heiko Klein
  */
 public class PatchException extends IOException {
     

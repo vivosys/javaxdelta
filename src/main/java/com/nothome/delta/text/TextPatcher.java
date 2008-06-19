@@ -35,8 +35,6 @@ import java.nio.CharBuffer;
 
 /**
  * Converts a text patch and source file to a resulting target file.
- * 
- * @author Elias Ross
  */
 public class TextPatcher {
 

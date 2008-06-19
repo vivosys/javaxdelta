@@ -24,14 +24,13 @@
 
 package com.nothome.delta;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
  * Interface for DIFF writers.
- * 
- * @author  torgeir
  */
-public interface DiffWriter {
+public interface DiffWriter extends Closeable {
     
     /**
      * Add a GDIFF copy instruction.

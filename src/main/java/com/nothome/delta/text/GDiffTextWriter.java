@@ -48,7 +48,7 @@ import java.io.Writer;
  * Note that 'y' is used for copy and 'i' for data since they aren't to be 
  * confused with the hex characters 'c' and 'd'.
  * <p>
- * Note that the length of text-string is capped at {@link #THRESHOLD} characters
+ * Note that the length of text-string is capped at {@link #CHUNK_SIZE} characters
  * for this implementation.
  * <p>
  * The initial version is 1 and is optionally indicated. Newer versions may support 
