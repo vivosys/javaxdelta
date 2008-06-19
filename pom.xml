@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.nothome</groupId>
   <artifactId>javaxdelta</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>javaxdelta</name>
 
   <!-- Project meta-data -->
@@ -29,8 +29,8 @@
   <url>http://sourceforge.net/projects/xdelta</url>
   <scm>
     <url>http://javaxdelta.svn.sourceforge.net/viewvc/javaxdelta/</url>
-    <connection>https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta</connection>
-    <developerConnection>https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta/trunk/javaxdelta</developerConnection>
+    <connection>scm:svn:https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta</connection>
+    <developerConnection>scm:svn:https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta/trunk/javaxdelta</developerConnection>
   </scm>
   <mailingLists>
     <mailingList>
@@ -101,12 +101,6 @@
       </plugin>
     </plugins>
   </build>
-  <repositories>
-    <repository>
-      <id>javaxdelta.sourceforge.net</id>
-      <url>http://javaxdelta.sourceforge.net/maven2/repository</url>
-    </repository>
-  </repositories>
 
   <!--  DEPENDENCIES -->
 
@@ -124,6 +118,12 @@
     </dependency>
   </dependencies>
 
+  <repositories>
+    <repository>
+      <id>javaxdelta.sourceforge.net</id>
+      <url>http://javaxdelta.sourceforge.net/maven2/repository</url>
+    </repository>
+  </repositories>
   <distributionManagement>
     <repository>
       <id>javaxdelta.sourceforge.net</id>
