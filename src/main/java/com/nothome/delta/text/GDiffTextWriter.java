@@ -24,6 +24,10 @@
 
 package com.nothome.delta.text;
 
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.Writer;
+
 /**
  * A text-file format analog for GDIFF, which is only supported for binary
  * streams.
@@ -53,10 +57,6 @@ package com.nothome.delta.text;
  * See also:
  * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
  */
-import java.io.CharArrayWriter;
-import java.io.IOException;
-import java.io.Writer;
-
 public class GDiffTextWriter implements DiffTextWriter {
 
     /**

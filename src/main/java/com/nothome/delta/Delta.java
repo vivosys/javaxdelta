@@ -37,6 +37,7 @@ package com.nothome.delta;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -114,6 +115,16 @@ public class Delta {
         compute(new ByteBufferSeekableSource(source), 
                 new ByteArrayInputStream(target),
                 new GDiffWriter(output));
+    }
+    
+    /**
+     * Compares the source bytes with target bytes, returning output.
+     */
+    public byte[] compute(byte source[], byte target[])
+    throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        compute(source, target, os);
+        return os.toByteArray();
     }
     
     /**

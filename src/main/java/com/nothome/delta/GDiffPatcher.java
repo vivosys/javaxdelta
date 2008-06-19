@@ -54,8 +54,8 @@ import java.nio.ByteBuffer;
 /**
  * This class patches an input file with a GDIFF patch fil�e.
  *
- * The patch file should follow the GDIFF file specification available at
- * http://www.w3.org/TR/NOTE-gdiff-19970901.html.
+ * The patch file follows the GDIFF file specification available at
+ * {@link http://www.w3.org/TR/NOTE-gdiff-19970901.html}.
  */
 public class GDiffPatcher {
     
