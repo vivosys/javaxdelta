@@ -33,6 +33,9 @@ import java.io.IOException;
  */
 public interface SeekableSource extends Readable, Closeable {
     
+    /**
+     * Sets the position for the next read operation.
+     */
     public void seek(long pos) throws IOException;
     
 }

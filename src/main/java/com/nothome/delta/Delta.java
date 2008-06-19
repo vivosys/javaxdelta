@@ -53,6 +53,12 @@ import java.nio.channels.ReadableByteChannel;
  * Class for computing deltas against a source.
  * The source file is read by blocks and a hash is computed per block.
  * Then the target is scanned for matching blocks.
+ * <p/>
+ * This class is not thread safe. Use one instance per thread.
+ * <p/>
+ * This class should support files over 4GB in length, although you must
+ * use a larger checksum size, such as 1K, as all checksums use "int" indexing.
+ * Newer versions may eventually support paging in/out of checksums.
  */
 public class Delta {
     
@@ -63,8 +69,8 @@ public class Delta {
     
     /**
      * Default size of 16.
-     * For "Lorem ipsum" files, the ideal size is about 14. Any smaller and
-     * the patch size becomes actually be larger.
+     * For "Lorem ipsum" text files (see the tests) the ideal size is about 14.
+     * Any smaller and the patch size becomes actually be larger.
      * <p>
      * Use a size like 64 or 128 for large files.
      */
@@ -79,6 +85,10 @@ public class Delta {
     private TargetState target;
     private DiffWriter output;
     
+    /**
+     * Constructs a new Delta.
+     * In the future, additional constructor arguments will set the algorithm details.
+     */
     public Delta() {
         setChunkSize(DEFAULT_CHUNK_SIZE);
     }
@@ -110,16 +120,16 @@ public class Delta {
      * Compares the source bytes with target input, writing to output.
      */
     public void compute(byte[] sourceBytes, InputStream inputStream,
-            DiffWriter diffWriter) throws IOException {
+            DiffWriter diffWriter) throws IOException
+    {
         compute(new ByteBufferSeekableSource(sourceBytes), 
                 inputStream, diffWriter);
     }
     
     /**
-     * Compares the source with a target, writing to output.
+     * Compares the source file with a target file, writing to output.
      * 
-     * @param target
-     * @param output
+     * @param output will be closed
      */
     public void compute(File sourceFile, File targetFile, DiffWriter output)
     throws IOException {
@@ -136,10 +146,7 @@ public class Delta {
     /**
      * Compares the source with a target, writing to output.
      * 
-     * @param targetIS second file to compare with
-     * @param output diff output
-     * 
-     * @throws IOException if diff generation fails
+     * @param output will be closed
      */
     public void compute(SeekableSource seekSource, InputStream targetIS, DiffWriter output)
     throws IOException {

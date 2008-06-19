@@ -3,12 +3,18 @@ package com.nothome.delta;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 import org.junit.Test;
 
+import at.spardat.xma.xdelta.test.JarDeltaJarPatcherTest;
+
+/**
+ * Tests random bytes.
+ * 
+ * Code from {@link JarDeltaJarPatcherTest}.
+ */
 public class MixedDiffTest {
 
     private SecureRandom random;
@@ -21,14 +27,12 @@ public class MixedDiffTest {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     @Test
     public void testIt() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        // int anz = randomSize(10);
-        for (int j = 0; j < 5; j++) {
+        for (int j = 0; j < 10; j++) {
             byte[] bytes = getRandomBytes();
             out.write(bytes, 0, bytes.length);
         }
@@ -42,14 +46,13 @@ public class MixedDiffTest {
         d.compute(oldBytes, mixedBytes, patch);
         GDiffPatcher p = new GDiffPatcher();
         byte[] madeOld = p.patch(oldBytes, patch.toByteArray());
-        int c = 0;
+        assertEquals(mixedBytes.length, madeOld.length);
         for (int i = 0; i < mixedBytes.length; i++) {
             byte a = mixedBytes[i];
             byte b = madeOld[i];
             if (a != b)
-                System.out.println(a + " " + b + " " + i);
+                fail(a + " " + b + " " + i);
         }
-        assertEquals(mixedBytes.length, madeOld.length);
     }
 
     private byte[] getRandomBytes() {

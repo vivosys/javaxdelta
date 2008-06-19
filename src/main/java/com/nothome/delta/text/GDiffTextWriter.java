@@ -32,19 +32,23 @@ package com.nothome.delta.text;
  * 
  <pre>
  gdiff-text ::= header , { copy | data }
- header ::= 'gdt' '\n'
+ header ::= 'gdt' , { version } , '\n'
  copy   ::= 'y' offset ',' length '\n'
  data   ::= 'i' length '\n' text-chunk '\n'
- length ::= digit , { hex-digit }
- offset ::= digit , { hex-digit }
+ length ::= hex-digit , { hex-digit }
+ offset ::= hex-digit , { hex-digit }
  hex-digit  ::= '0'-'9' | 'a'-'f'
  text-chunk ::= (* arbitrary text string *)
+ version ::= '1'-'9'
  </pre>
  * Note that 'y' is used for copy and 'i' for data since they aren't to be 
  * confused with the hex characters 'c' and 'd'.
  * <p>
  * Note that the length of text-string is capped at {@link #THRESHOLD} characters
  * for this implementation.
+ * <p>
+ * The initial version is 1 and is optionally indicated. Newer versions may support 
+ * additional commands and hints.
  * <p>
  * See also:
  * http://www.w3.org/TR/NOTE-gdiff-19970901.html.

@@ -36,7 +36,6 @@ import java.nio.CharBuffer;
 /**
  * Converts a text patch and source file to a resulting target file.
  * 
- * TODO support "long" offset and lengths. 
  * @author Elias Ross
  */
 public class TextPatcher {

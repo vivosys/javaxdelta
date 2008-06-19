@@ -31,11 +31,14 @@ import gnu.trove.decorator.TLongIntHashMapDecorator;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * Checksum computation class.
+ */
 public class Checksum {
     
-    public static boolean debug = false;
+    static final boolean debug = false;
     
-    protected TLongIntHashMap checksums = new TLongIntHashMap();
+    private TLongIntHashMap checksums = new TLongIntHashMap();
     
     private static final char single_hash[] = {
         /* Random numbers generated using SLIB's pseudo-random number generator. */
@@ -75,7 +78,7 @@ public class Checksum {
     
     /**
      * Initialize checksums for source. The checksum for the <code>chunkSize</code> bytes at offset
-     * <code>chunkSize</code> * i is inserted into an array at index i.
+     * <code>chunkSize</code> * i is inserted into a hash map.
      */
     public Checksum(SeekableSource source, int chunkSize) throws IOException {
         ByteBuffer bb = ByteBuffer.allocate(chunkSize * 2);
@@ -94,7 +97,8 @@ public class Checksum {
     }
     
     /**
-     * Marks, gets, then resets the checksum computed from the buffer.
+     * Finds the checksum computed from the buffer.
+     * Marks, gets, then resets the buffer.
      */
     public static long queryChecksum(ByteBuffer bb, int len) {
         bb.mark();
@@ -112,6 +116,14 @@ public class Checksum {
         return ((high & 0xffff) << 16) | (low & 0xffff);
     }
     
+    /**
+     * Increments a checksum.
+     * @param checksum initial checksum
+     * @param out byte leaving view
+     * @param in byte entering view
+     * @param chunkSize size of chunks
+     * @return new checksum
+     */
     public static long incrementChecksum(long checksum, byte out, byte in, int chunkSize) {
         char old_c = single_hash[out+128];
         char new_c = single_hash[in+128];
@@ -124,6 +136,9 @@ public class Checksum {
         return single_hash;
     }
 
+    /**
+     * Finds the index of a checksum.
+     */
     public int findChecksumIndex(long hashf) {
         if (!checksums.contains(hashf))
             return -1;

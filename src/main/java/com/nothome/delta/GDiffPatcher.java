@@ -69,11 +69,7 @@ public class GDiffPatcher {
     }
     
     /**
-     * Patches to output file.
-     * @param sourceFile
-     * @param patchFile
-     * @param outputFile
-     * @throws IOException
+     * Patches to an output file.
      */
     public void patch(File sourceFile, File patchFile, File outputFile)
 		throws IOException
@@ -82,7 +78,7 @@ public class GDiffPatcher {
         InputStream patch = new FileInputStream(patchFile);
         OutputStream output = new FileOutputStream(outputFile);
         try {
-            runPatch(source, patch, output);
+            patch(source, patch, output);
         } catch (IOException e) {
             throw e;
         } finally {
@@ -93,39 +89,25 @@ public class GDiffPatcher {
     }
     
     /**
-     * Patches to output.
-     * @param source
-     * @param patch
-     * @param output
-     * @throws IOException
-     * @throws PatchException
+     * Patches to an output stream.
      */
-    public void patch(byte[] source, InputStream patch, OutputStream output) throws IOException, PatchException{
+    public void patch(byte[] source, InputStream patch, OutputStream output) throws IOException {
         patch(new ByteBufferSeekableSource(source), patch, output);
     }
     
     /**
-     * Patches in memory.
+     * Patches in memory, returning the patch result.
      */
-    public byte[] patch(byte[] source, byte[] patch) throws IOException, PatchException{
+    public byte[] patch(byte[] source, byte[] patch) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         patch(source, new ByteArrayInputStream(patch), os);
         return os.toByteArray();
     }
     
     /**
-     * Patches to output.
-     * @param source
-     * @param patch
-     * @param out
-     * @throws IOException
-     * @throws PatchException
+     * Patches to an output stream.
      */
-    public void patch(SeekableSource source, InputStream patch, OutputStream out) throws IOException, PatchException {
-        runPatch(source, patch, out);
-    }
-    
-    private void runPatch(SeekableSource source, InputStream patch, OutputStream out) throws IOException {
+    public void patch(SeekableSource source, InputStream patch, OutputStream out) throws IOException {
         
         DataOutputStream outOS = new DataOutputStream(out);
         DataInputStream patchIS = new DataInputStream(patch);

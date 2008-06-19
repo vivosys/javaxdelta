@@ -27,7 +27,7 @@ package com.nothome.delta.text;
 import java.io.IOException;
 
 /**
- * Writes characters.
+ * Writes diff commands to a stream.
  */
 public interface DiffTextWriter {
     
@@ -35,25 +35,21 @@ public interface DiffTextWriter {
      * Add a copy command.
      * @param offset start of sequence
      * @param length length of sequence
-     * @throws IOException if copy fails
      */
     void addCopy(int offset, int length) throws IOException;
     
     /**
      * Add a character to output.
-     * @throws IOException
      */
 	void addData(char seq) throws IOException;
 	
 	/**
 	 * Writes current state to output stream.
-	 * @throws IOException
 	 */
     void flush() throws IOException;
     
     /**
      * Frees internal resources; closes output stream.
-     * @throws IOException
      */
     void close() throws IOException;
 }

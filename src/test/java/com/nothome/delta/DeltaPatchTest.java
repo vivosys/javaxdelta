@@ -43,8 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * 
- * @author Heiko Klein
+ * Tests {@link Delta} and {@link GDiffPatcher}.
  */
 public class DeltaPatchTest {
 

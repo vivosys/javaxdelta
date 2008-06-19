@@ -7,6 +7,9 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+/**
+ * Tests {@link GDiffWriter}.
+ */
 public class GDiffWriterTest {
 
     @Test

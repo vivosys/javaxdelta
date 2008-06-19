@@ -42,7 +42,6 @@ public class PatchException extends IOException {
     public PatchException() {
     }
     
-    
     /**
      * Constructs an instance of <code>PatchException</code> with the specified detail message.
      * @param msg the detail message.

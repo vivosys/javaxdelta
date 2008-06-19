@@ -34,7 +34,7 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 /**
- * Checksum tests
+ * Tests {@link Checksum}.
  */
 public class ChecksumTest {
 

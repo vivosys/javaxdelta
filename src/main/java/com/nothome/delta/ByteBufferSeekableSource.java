@@ -31,8 +31,6 @@ import java.nio.ByteBuffer;
 
 /**
  * Wraps a byte buffer as a source
- * 
- * @author Heiko Klein
  */
 public class ByteBufferSeekableSource implements SeekableSource {
     

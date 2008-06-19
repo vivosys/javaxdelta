@@ -26,21 +26,23 @@
 
 package com.nothome.delta;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
 /**
- * This is a wrapper interface which presents the functions use in
- * GDiffPatcher for the RandomAccessFile
+ * For sources of random-access data, such as {@link RandomAccessFile}.
  * 
  * @author Heiko Klein
  */
-public interface SeekableSource {
+public interface SeekableSource extends Closeable {
     
-    public void seek(long pos) throws IOException ;
-    public void close() throws IOException;
-    public int read(ByteBuffer bb) throws IOException;
+    /**
+     * Sets the position for the next {@link #read(ByteBuffer)}.
+     */
+    void seek(long pos) throws IOException ;
     
-    
+    int read(ByteBuffer bb) throws IOException;
     
 }

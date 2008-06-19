@@ -361,6 +361,9 @@ public class Delta {
         return sb;
     }
     
+    /**
+     * Creates a patch with file names.
+     */
     public static void main(String s[]) throws IOException {
         if (s.length != 2) {
             System.err.println("Usage: java ...Delta file1 file2 [> somefile]");

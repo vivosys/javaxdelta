@@ -32,6 +32,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
 /**
+ * Wraps a random access file.
  * 
  * @author Heiko Klein
  */
@@ -39,6 +40,10 @@ public class RandomAccessFileSeekableSource implements SeekableSource {
     
     private RandomAccessFile raf;
 
+    /**
+     * Constructs a new RandomAccessFileSeekableSource.
+     * @param raf
+     */
     public RandomAccessFileSeekableSource(RandomAccessFile raf) {
         if (raf == null)
             throw new NullPointerException("raf");

@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.nio.CharBuffer;
 
 /**
- * Wrapper for a CharBuffer.
+ * Wrapper for a {@link CharBuffer}.
  */
 public class CharBufferSeekableSource implements SeekableSource {
     
@@ -43,7 +43,11 @@ public class CharBufferSeekableSource implements SeekableSource {
         if (cb == null)
             throw new NullPointerException("cb");
         this.cb = cb;
-        cur = cb;
+        try {
+            seek(0);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     /**
@@ -57,7 +61,7 @@ public class CharBufferSeekableSource implements SeekableSource {
         cb.rewind();
         cur = cb.slice();
         if (pos > cur.limit())
-            throw new IllegalArgumentException("pos " + pos + " cannot seek " + cur.limit());
+            throw new IOException("pos " + pos + " cannot seek " + cur.limit());
         cur.position((int) pos);
     }
 
