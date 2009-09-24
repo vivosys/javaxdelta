@@ -151,6 +151,8 @@ public class Delta {
                         debug("output.addCopy("+offset+","+match+")");
                     output.addCopy(offset, match);
                 } else {
+                    // move the position back according to how much we can't copy
+                    target.tbuf.position(target.tbuf.position() - match);
                     addData();
                 }
             } else {

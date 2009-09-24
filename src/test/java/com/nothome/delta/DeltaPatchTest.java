@@ -134,6 +134,22 @@ public class DeltaPatchTest {
         doTest();
     }
         
+    @Test
+    public void testMinBug() throws IOException {
+        use("min1.bin", "min2.bin");
+        doTest();
+        chunkSize = 14;
+        doTest();
+    }
+    
+    @Test
+    public void testObj12() throws IOException {
+        use("obj1.bin", "obj2.bin");
+        doTest();
+        chunkSize = 14;
+        doTest();
+    }
+    
     private void doTest() throws IOException {
         File patchedFile = new File("patchedFile.txt");
         File delta = new File("delta");
@@ -145,12 +161,12 @@ public class DeltaPatchTest {
         output.close();
 
         assertTrue(delta.exists());
-        
+
         System.out.println("delta length " + delta.length() + " for " + test1File + " " + test2File);
-        System.out.println(read(delta).toString());
+        System.out.println(toString(read(delta).toByteArray()));
         System.out.println("end patch");
 
-		GDiffPatcher diffPatcher = new GDiffPatcher();
+        GDiffPatcher diffPatcher = new GDiffPatcher();
         diffPatcher.patch(test1File, delta, patchedFile);
         assertTrue(patchedFile.exists());
 
@@ -170,5 +186,26 @@ public class DeltaPatchTest {
         test1File = new File(l1.getPath());
         test2File = new File(l2.getPath());
     }
+
+    private static void append(StringBuffer sb, int value) {
+        char b1 = (char)((value >> 4) & 0x0F);
+        char b2 = (char)((value) & 0x0F);
+        sb.append( Character.forDigit(b1, 16) );
+        sb.append( Character.forDigit(b2, 16) );
+    }
+
+    /**
+     * Return the data as a series of hex values.
+     */
+    public String toString(byte buffer[])
+    {
+        int length = buffer.length;
+        StringBuffer sb = new StringBuffer(length * 2);
+        for (int i=0; i<length; i++) {
+            append(sb, buffer[i]);
+        }
+        return sb.toString();
+    }
+
 
 }

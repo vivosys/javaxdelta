@@ -186,6 +186,8 @@ public class Delta {
                         debug("output.addCopy("+offset+","+match+")");
                     output.addCopy(offset, match);
                 } else {
+                    // move the position back according to how much we can't copy
+                    target.tbuf.position(target.tbuf.position() - match);
                     addData();
                 }
             } else {
@@ -198,7 +200,7 @@ public class Delta {
     private void addData() throws IOException {
         int i = target.read();
         if (debug)
-            debug("addData " + (char)i);
+            debug("addData " + Integer.toHexString(i));
         if (i == -1)
             return;
         output.addData((byte)i);
@@ -364,14 +366,31 @@ public class Delta {
         private String dump() { return dump(tbuf); }
         
         private String dump(ByteBuffer bb) {
+            return getTextDump(bb);
+        }
+        
+        private void append(StringBuffer sb, int value) {
+            char b1 = (char)((value >> 4) & 0x0F);
+            char b2 = (char)((value) & 0x0F);
+            sb.append( Character.forDigit(b1, 16) );
+            sb.append( Character.forDigit(b2, 16) );
+        }
+
+        public String getTextDump(ByteBuffer bb)
+        {
+            StringBuffer sb = new StringBuffer(bb.remaining() * 2);
             bb.mark();
-            StringBuilder sb = new StringBuilder();
-            while (bb.hasRemaining())
-                sb.append((char)bb.get());
+            while (bb.hasRemaining()) {
+                int val = bb.get();
+                if (val > 32 && val < 127)
+                    sb.append(" ").append((char)val);
+                else
+                    append(sb, val);
+            }
             bb.reset();
             return sb.toString();
         }
-        
+
     }
     
     /**
