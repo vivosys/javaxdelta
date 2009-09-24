@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.nothome</groupId>
   <artifactId>javaxdelta</artifactId>
-  <version>2.0.1-SNAPSHOT</version>
+  <version>2.0.1</version>
   <name>javaxdelta</name>
 
   <!-- Project meta-data -->
@@ -26,9 +26,9 @@
   </developers>
   <url>http://sourceforge.net/projects/xdelta</url>
   <scm>
-    <url>http://javaxdelta.svn.sourceforge.net/viewvc/javaxdelta/tags/javaxdelta-2.0.0</url>
-    <connection>scm:svn:https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta/tags/javaxdelta-2.0.0</connection>
-    <developerConnection>scm:svn:https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta/tags/javaxdelta-2.0.0</developerConnection>
+    <url>http://javaxdelta.svn.sourceforge.net/viewvc/javaxdelta/tags/javaxdelta-2.0.1</url>
+    <connection>scm:svn:https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta/tags/javaxdelta-2.0.1</connection>
+    <developerConnection>scm:svn:https://javaxdelta.svn.sourceforge.net/svnroot/javaxdelta/tags/javaxdelta-2.0.1</developerConnection>
   </scm>
   <mailingLists>
     <mailingList>
@@ -134,7 +134,7 @@
   <distributionManagement>
     <repository>
       <id>javaxdelta.sourceforge.net</id>
-      <url>scp://javaxdelta.sourceforge.net/home/groups/j/ja/javaxdelta/htdocs/maven2/repository</url>
+	  <url>sftp://web.sourceforge.net/home/groups/j/ja/javaxdelta/htdocs/maven2/repository</url>
     </repository>
   </distributionManagement>
 
