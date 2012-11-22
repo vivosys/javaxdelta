@@ -2,7 +2,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.nothome</groupId>
   <artifactId>javaxdelta</artifactId>
-  <version>2.0.1</version>
+  <packaging>bundle</packaging>
+  <version>2.0.1.vivo_1</version>
   <name>javaxdelta</name>
 
   <!-- Project meta-data -->
@@ -106,6 +107,24 @@
           </links>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.6</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Import-Package><![CDATA[
+            *
+            ]]>
+            </Import-Package>
+            <Export-Package><![CDATA[
+            *
+            ]]>
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -119,18 +138,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>trove</groupId>
-      <artifactId>trove</artifactId>
-      <version>2.1.1</version>
+      <groupId>net.sf.trove4j</groupId>
+      <artifactId>trove4j</artifactId>
+      <version>2.0.2</version>
     </dependency>
   </dependencies>
 
-  <repositories>
-    <repository>
-      <id>javaxdelta.sourceforge.net</id>
-      <url>http://javaxdelta.sourceforge.net/maven2/repository</url>
-    </repository>
-  </repositories>
   <distributionManagement>
     <repository>
       <id>javaxdelta.sourceforge.net</id>
